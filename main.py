@@ -18,7 +18,7 @@ fast = 3
 xMinusLimit = 5
 xPlusLimit = 395
 yMinusLimit = 5
-yPlusLimit = 500
+yPlusLimit = 495
 bullets = []
 opening = True
 running = False
@@ -29,7 +29,7 @@ bulletImg = None
 playerImg = None
 gameOverImg = None
 x = 200
-y = 500
+y = 480
 
 try:
     bulletImg = [pygame.image.load("./img/asteroid15_1.png"), pygame.image.load("./img/asteroid15_2.png"),
@@ -51,34 +51,41 @@ except Exception as err:
 
 
 class Bullet:
-    def __init__(self, x, y, image, size, angle, speed):
-        self.x, self.y, self.image, self.size, self.angle, self.speed = x, y, image, size, angle, speed
+    def __init__(self, timing, x, y, image, size, angle, speed, startX, startY):
+        self.x, self.y, self.image, self.size, self.angle, self.speed, self.timing = x, y, image, size, angle, speed, timing
+        self.startX, self.startY = startX, startY
 
-    def go(self, playerX, playerY):
-        self.x += math.cos(self.angle * math.pi) * self.speed
-        self.y += math.sin(self.angle * math.pi) * self.speed
+    def go(self, playerX, playerY, curr):
+        self.x = self.startX + math.cos(self.angle * math.pi) * self.speed * (curr - self.timing)
+        self.y = self.startY + math.sin(self.angle * math.pi) * self.speed * (curr - self.timing)
+
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y and self.image == other.image and self.size == other.size and self.angle == other.angle and self.speed == other.speed and self.startX == other.startX and self.startY == other.startY
 
 
 class BulletPlayer:
-    def __init__(self, x, y, image, size, playerposX, playerposY, speed, startX, startY):
+    def __init__(self, timing, x, y, image, size, playerposX, playerposY, speed, startX, startY):
         self.x, self.y, self.image, self.size, self.playerposX, self.playerposY, self.speed = x, y, image, size, playerposX, playerposY, speed
-        self.startX, self.startY = startX, startY
+        self.startX, self.startY, self.timing = startX, startY, timing
 
-    def go(self, playerX, playerY):
+    def go(self, playerX, playerY, curr):
         if self.playerposX is None and self.playerposY is None:
             self.playerposX, self.playerposY = playerX, playerY
-        self.x += self.speed * (self.playerposX - self.startX) / (
+        self.x = self.startX + (curr - self.timing) * self.speed * (self.playerposX - self.startX) / (
                     ((self.playerposX - self.startX) ** 2 + (self.playerposY - self.startY) ** 2) ** 0.5)
-        self.y += self.speed * (self.playerposY - self.startY) / (
+        self.y = self.startY + (curr - self.timing) * self.speed * (self.playerposY - self.startY) / (
                     ((self.playerposX - self.startX) ** 2 + (self.playerposY - self.startY) ** 2) ** 0.5)
 
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y and self.image == other.image and self.size == other.size and self.angle == other.angle and self.speed == other.speed and self.startX == other.startX and self.startY == other.startY and self.timing == other.timing
 
-def Circle(x, y, image, size, angle, speed, shift):
+
+def Circle(timing, x, y, image, size, angle, speed, shift):
     a = []
     i = 0
-    while i <= 2:
+    while i < 2:
+        a.append(Bullet(timing, x, y, image, size, i + shift, speed, x, y))
         i += angle
-        a.append(Bullet(x, y, image, size, i + shift, speed))
     return a
 
 
@@ -93,12 +100,12 @@ while True:
     p = list(map(str, line.split()))
     if cr == int(p[0]):
         if p[1] == "C":
-            r, s = map(float, p[7].split(";"))
-            cur.extend(Circle(float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), r, float(p[6]), s))
+            r, s = p[7].split(";")
+            cur.extend(Circle(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), float(r), float(p[6]), float(s)))
         elif p[1] == "L":
-            cur.append(Bullet(float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), float(p[7]), float(p[6])))
+            cur.append(Bullet(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), float(p[7]), float(p[6]), float(p[2]), float(p[3])))
         elif p[1] == "E":
-            cur.append(BulletPlayer(float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), None, None, float(p[6]), int(p[2]), int(p[3])))
+            cur.append(BulletPlayer(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), None, None, float(p[6]), int(p[2]), int(p[3])))
     else:
         if cr != 0:
             patterns.append(cur)
@@ -106,12 +113,12 @@ while True:
         cur = []
         cr = int(p[0])
         if p[1] == "C":
-            r, s = map(float, p[7].split(";"))
-            cur.extend(Circle(float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), r, float(p[6]), s))
+            r, s = p[7].split(";")
+            cur.extend(Circle(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), float(r), float(p[6]), float(s)))
         elif p[1] == "L":
-            cur.append(Bullet(float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), float(p[7]), float(p[6])))
+            cur.append(Bullet(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), float(p[7]), float(p[6]), float(p[2]), float(p[3])))
         elif p[1] == "E":
-            cur.append(BulletPlayer(float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), None, None, float(p[6]), int(p[2]), int(p[3])))
+            cur.append(BulletPlayer(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), None, None, float(p[6]), int(p[2]), int(p[3])))
 timingPoints.append(cr)
 patterns.append(cur)
 f.close()
@@ -3700,17 +3707,15 @@ while running and level == 1:
             bullets.extend(patterns[0])
             del patterns[0]
 
-    index = 0
     for bullet in bullets:
-        bullet.go(x, y)
+        bullet.go(x, y, currentFrame)
         # if (bullet.x - x) ** 2 + (bullet.y - y) ** 2 < (bullet.size / 2) ** 2:
         #     bullets = []
         #     i = 0
         #     break
         if bullet.x < -30 or bullet.x > 430 or bullet.y < -10 or bullet.y > 530:
-            del bullets[index]
-        screen.blit(bullet.image, (bullet.x - bullet.size / 2, bullet.y - bullet.size / 2))
-        index += 1
+            bullets.remove(bullet)
+        screen.blit(bullet.image, (int(bullet.x - bullet.size / 2), int(bullet.y - bullet.size / 2)))
     for warn in warnLine:
         if warn.end < currentFrame - warn.start:
             warnLine.remove(warn)
