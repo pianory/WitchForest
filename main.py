@@ -10,7 +10,7 @@ pygame.mixer.init()
 screen = pygame.display.set_mode((640, 640))
 
 # 기본 변수
-FPS = 60
+FPS = 30
 fpsClock = pygame.time.Clock()
 score = 0
 asteroidTimer = 100
@@ -3702,7 +3702,7 @@ while running and level == 1:
 
     index = 0
     for bullet in bullets:
-        bullet.go(currentFrame)
+        bullet.go(x, y)
         # if (bullet.x - x) ** 2 + (bullet.y - y) ** 2 < (bullet.size / 2) ** 2:
         #     bullets = []
         #     i = 0
