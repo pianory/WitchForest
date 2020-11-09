@@ -221,16 +221,21 @@ while running and level == 1:
         if currentFrame == timingPoints[patternNo]:
             bullets.extend(patterns[patternNo])
             patternNo += 1
-
-    for bullet in bullets:
+    index = 0
+    while True:
+        if index >= len(bullets):
+            break
+        bullet = bullets[index]
         bullet.go(x, y, currentFrame)
         # if (bullet.x - x) ** 2 + (bullet.y - y) ** 2 < (bullet.size / 2) ** 2:
         #     bullets = []
         #     i = 0
         #     break
         if bullet.x < -10 or bullet.x > 410 or bullet.y < -10 or bullet.y > 510:
-            bullets.remove(bullet)
+            del bullets[index]
+            index -= 1
         screen.blit(bullet.image, (int(bullet.x - bullet.size / 2), int(bullet.y - bullet.size / 2)))
+        index += 1
     fpsClock.tick(FPS)
     pygame.display.flip()
 
