@@ -2,6 +2,7 @@ import pygame
 import random
 import sys
 import math
+import time
 
 # -*- coding:utf-8 -*-#
 
@@ -10,7 +11,7 @@ pygame.mixer.init()
 screen = pygame.display.set_mode((640, 640))
 
 # 기본 변수
-FPS = 30
+FPS = 60
 fpsClock = pygame.time.Clock()
 score = 0
 asteroidTimer = 100
@@ -53,29 +54,31 @@ class Bullet:
         self.x, self.y, self.image, self.size, self.angle, self.speed, self.timing = x, y, image, size, angle, speed, timing
         self.startX, self.startY = startX, startY
 
-    def go(self, playerX, playerY, curr):
-        self.x = self.startX + math.cos(self.angle * math.pi) * self.speed * (curr - self.timing)
-        self.y = self.startY + math.sin(self.angle * math.pi) * self.speed * (curr - self.timing)
-
-    def __eq__(self, other):
-        return self.x == other.x and self.y == other.y and self.image == other.image and self.size == other.size and self.angle == other.angle and self.speed == other.speed and self.startX == other.startX and self.startY == other.startY
+    def show(self, playerX, playerY):
+        pass
 
 
-class BulletPlayer:
-    def __init__(self, timing, x, y, image, size, playerposX, playerposY, speed, startX, startY):
-        self.x, self.y, self.image, self.size, self.playerposX, self.playerposY, self.speed = x, y, image, size, playerposX, playerposY, speed
-        self.startX, self.startY, self.timing = startX, startY, timing
+class BulletPlayer(Bullet):
+    def __init__(self, timing, x, y, image, size, playerposX, playerposY, speed, startX, startY, angle):
+        super().__init__(timing, x, y, image, size, angle, speed, startX, startY)
+        self.playerposX, self.playerposY = playerposX, playerposY
 
-    def go(self, playerX, playerY, curr):
-        if self.playerposX is None and self.playerposY is None:
-            self.playerposX, self.playerposY = playerX, playerY
-        self.x = self.startX + (curr - self.timing) * self.speed * (self.playerposX - self.startX) / (
-                    ((self.playerposX - self.startX) ** 2 + (self.playerposY - self.startY) ** 2) ** 0.5)
-        self.y = self.startY + (curr - self.timing) * self.speed * (self.playerposY - self.startY) / (
-                    ((self.playerposX - self.startX) ** 2 + (self.playerposY - self.startY) ** 2) ** 0.5)
+    def show(self, playerX, playerY):
+        self.angle = math.atan(
+            (playerY - self.startY) / (playerX - self.startX+0.0001)) / math.pi if playerX > self.startX else (math.pi + math.atan(
+            (playerY - self.startY) / (playerX - self.startX+0.0001))) / math.pi
 
-    def __eq__(self, other):
-        return self.x == other.x and self.y == other.y and self.image == other.image and self.size == other.size and self.angle == other.angle and self.speed == other.speed and self.startX == other.startX and self.startY == other.startY and self.timing == other.timing
+
+class BulletShow:
+    def __init__(self, timing, image, size, startX, startY, angle, speed, status, x, y):
+        self.timing, self.image, self.size, self.startX, self.startY, self.angle, self.status = timing, image, size, startX, startY, angle, status
+        self.x, self.y = x, y
+        self.speed = speed
+
+    def go(self, c):
+        global FPS
+        self.x = self.startX + math.cos(self.angle * math.pi) * self.speed * (c - self.timing) / 1000 * FPS
+        self.y = self.startY + math.sin(self.angle * math.pi) * self.speed * (c - self.timing) / 1000 * FPS
 
 
 def Circle(timing, x, y, image, size, angle, speed, shift):
@@ -83,7 +86,7 @@ def Circle(timing, x, y, image, size, angle, speed, shift):
     a = []
     i = 0
     while i < 2:
-        a.append(Bullet(timing, x, y, image, size, i + shift, speed*60/FPS, x, y))
+        a.append(Bullet(timing, x, y, image, size, i + shift, speed * 60 / FPS, x, y))
         i += angle
     return a
 
@@ -93,11 +96,11 @@ def Opener(timing, x, y, image, size, angle, speed):
     a = []
     speedList = list(map(float, speed.split(";")))
     for i in speedList:
-        a.append(Bullet(timing, x, y, image, size, angle, i*60/FPS, x, y))
+        a.append(Bullet(timing, x, y, image, size, angle, i * 60 / FPS, x, y))
     return a
 
 
-f = open("pattern1.ptn", "r") # File Read
+f = open("pattern1.ptn", "r")  # File Read
 cr = 0
 timingPoints = []
 patterns = []
@@ -109,13 +112,18 @@ while True:
     if cr == int(p[0]):
         if p[1] == "C":
             r, s = p[7].split(";")
-            cur.extend(Circle(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), float(r), float(p[6]), float(s)))
+            cur.extend(
+                Circle(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), float(r), float(p[6]),
+                       float(s)))
         elif p[1] == "L":
-            cur.append(Bullet(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), float(p[7]), float(p[6])*60/FPS, float(p[2]), float(p[3])))
+            cur.append(Bullet(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), float(p[7]),
+                              float(p[6]) * 60 / FPS, float(p[2]), float(p[3])))
         elif p[1] == "E":
-            cur.append(BulletPlayer(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), None, None, float(p[6])*60/FPS, int(p[2]), int(p[3])))
+            cur.append(BulletPlayer(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), None, None,
+                                    float(p[6]) * 60 / FPS, int(p[2]), int(p[3]), 0))
         elif p[1] == "O":
-            cur.extend(Opener(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), float(p[7]), p[6]))
+            cur.extend(
+                Opener(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), float(p[7]), p[6]))
     else:
         if cr != 0:
             patterns.append(cur)
@@ -124,13 +132,18 @@ while True:
         cr = int(p[0])
         if p[1] == "C":
             r, s = p[7].split(";")
-            cur.extend(Circle(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), float(r), float(p[6]), float(s)))
+            cur.extend(
+                Circle(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), float(r), float(p[6]),
+                       float(s)))
         elif p[1] == "L":
-            cur.append(Bullet(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), float(p[7]), float(p[6])*60/FPS, float(p[2]), float(p[3])))
+            cur.append(Bullet(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), float(p[7]),
+                              float(p[6]) * 60 / FPS, float(p[2]), float(p[3])))
         elif p[1] == "E":
-            cur.append(BulletPlayer(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), None, None, float(p[6])*60/FPS, int(p[2]), int(p[3])))
+            cur.append(BulletPlayer(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), None, None,
+                                    float(p[6]) * 60 / FPS, int(p[2]), int(p[3]), 0))
         elif p[1] == "O":
-            cur.extend(Opener(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), float(p[7]), p[6]))
+            cur.extend(
+                Opener(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), float(p[7]), p[6]))
 timingPoints.append(cr)
 patterns.append(cur)
 f.close()
@@ -156,18 +169,23 @@ while opening:
         opening = False
     running = True
     level = 1
-currentFrame = 0
-previousShoot = False
+isStart = True
 
 i = 0
 q = 0
 patternNo = 0
 length = len(patterns)
+bullets = []
+for _ in range(500):
+    bullets.append(BulletShow(None, None, None, None, None, None, None, False, None, None)) # Tmg, img, siz, sx, sy, ang, spd, sta, x, y
 while running and level == 1:
-    if currentFrame == 0:
+    if isStart:
         pygame.mixer.music.load(musics[0])
         pygame.mixer.music.play()
-    currentFrame += 1
+        start = int(round(time.time() * 1000))
+        print(start)
+        isStart = False
+    nowTime = int(round(time.time() * 1000))
     screen.fill((255, 255, 255))  # 회색 화면
     screen.blit(background[0], (0, 0))
 
@@ -218,24 +236,33 @@ while running and level == 1:
                 y += 1.5 * fast
                 if y > yPlusLimit: y = yPlusLimit
     if length > patternNo:
-        if currentFrame == timingPoints[patternNo]:
-            bullets.extend(patterns[patternNo])
+        if nowTime - start >= int(timingPoints[patternNo]):
+            j = 0
+            curr = patterns[patternNo][j]
+            curr.show(x, y)
+            i = 0
+            while j < len(patterns[patternNo]):
+                if not bullets[i].status:
+                    bullets[i].timing, bullets[i].image, bullets[i].size, bullets[i].startX, bullets[i].startY, bullets[i].angle, bullets[i].speed, bullets[i].x, bullets[i].y \
+                        = curr.timing, curr.image, curr.size, curr.startX, curr.startY, curr.angle, curr.speed, curr.x, curr.y
+                    bullets[i].status = True
+                    j += 1
+                    if j >= len(patterns[patternNo]):
+                        break
+                    curr = patterns[patternNo][j]
+                    curr.show(x, y)
+                i += 1
             patternNo += 1
-    index = 0
-    while True:
-        if index >= len(bullets):
-            break
-        bullet = bullets[index]
-        bullet.go(x, y, currentFrame)
-        # if (bullet.x - x) ** 2 + (bullet.y - y) ** 2 < (bullet.size / 2) ** 2:
-        #     bullets = []
-        #     i = 0
-        #     break
-        if bullet.x < -10 or bullet.x > 410 or bullet.y < -10 or bullet.y > 510:
-            del bullets[index]
-            index -= 1
-        screen.blit(bullet.image, (int(bullet.x - bullet.size / 2), int(bullet.y - bullet.size / 2)))
-        index += 1
+    for i in bullets:
+        if i.status:
+            i.go(nowTime - start)
+            if i.x < -10 or i.x > 410 or i.y < -10 or i.y > 510:
+                i.status = False
+            else:
+                # if (i.x - x) ** 2 + (i.y - y) ** 2 < (i.size / 2) ** 2:
+                #     bullets = [BulletShow(None, None, None, None, None, None, False, None, None)] * 500 # Tmg, img, siz, sx, sy, ang, spd, x, y
+                #     break
+                screen.blit(i.image, (int(int(i.x) - i.size / 2), int(int(i.y) - i.size / 2)))
     fpsClock.tick(FPS)
     pygame.display.flip()
 
