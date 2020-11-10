@@ -260,7 +260,9 @@ while running and level == 1:
                 i.status = False
             else:
                 # if (i.x - x) ** 2 + (i.y - y) ** 2 < (i.size / 2) ** 2:
-                #     bullets = [BulletShow(None, None, None, None, None, None, False, None, None)] * 500 # Tmg, img, siz, sx, sy, ang, spd, x, y
+                #     bullets = []
+                #     for _ in range(500):
+                #         bullets.append(BulletShow(None, None, None, None, None, None, None, False, None, None)) # Tmg, img, siz, sx, sy, ang, spd, sta, x, y
                 #     break
                 screen.blit(i.image, (int(int(i.x) - i.size / 2), int(int(i.y) - i.size / 2)))
     fpsClock.tick(FPS)
