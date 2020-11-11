@@ -151,7 +151,7 @@ f.close()
 
 def Text(arg1, x, y):
     font = pygame.font.Font("./fonts/HeirofLightRegular.ttf", 18)
-    text = font.render("SCORE  " + str(arg1).zfill(5), True, (0, 0, 0))
+    text = font.render("TIMING  " + str(arg1).zfill(10), True, (0, 0, 0))
     textRect = text.get_rect()
     textRect.centerx = x
     textRect.centery = y
@@ -189,7 +189,7 @@ while running and level == 1:
     screen.fill((255, 255, 255))  # 회색 화면
     screen.blit(background[0], (0, 0))
 
-    # Text(score, 520, 30)
+    Text(nowTime-start, 520, 30)
     playerPos = (x - 12, y - 22)
     screen.blit(playerImg, playerPos)
 
