@@ -105,7 +105,9 @@ cr = 0
 timingPoints = []
 patterns = []
 cur = []
+nowLine=0
 while True:
+    # print(nowLine)
     line = f.readline()
     if not line: break
     p = list(map(str, line.split()))
@@ -144,6 +146,7 @@ while True:
         elif p[1] == "O":
             cur.extend(
                 Opener(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), float(p[7]), p[6]))
+    # nowLine += 1
 timingPoints.append(cr)
 patterns.append(cur)
 f.close()
