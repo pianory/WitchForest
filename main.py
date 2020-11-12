@@ -147,7 +147,7 @@ while True:
                               float(p[6]) * 60 / FPS, float(p[2]), float(p[3])))
         elif p[1] == "E":
             cur.append(BulletPlayer(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), None, None,
-                                    float(p[6]) * 60 / FPS, int(p[2]), int(p[3]), 0))
+                                    float(p[6]) * 60 / FPS, float(p[2]), float(p[3]), 0))
         elif p[1] == "O":
             cur.extend(
                 Opener(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), float(p[7]), p[6]))
@@ -167,7 +167,7 @@ while True:
                               float(p[6]) * 60 / FPS, float(p[2]), float(p[3])))
         elif p[1] == "E":
             cur.append(BulletPlayer(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), None, None,
-                                    float(p[6]) * 60 / FPS, int(p[2]), int(p[3]), 0))
+                                    float(p[6]) * 60 / FPS, float(p[2]), float(p[3]), 0))
         elif p[1] == "O":
             cur.extend(
                 Opener(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), float(p[7]), p[6]))
