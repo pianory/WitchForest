@@ -23,7 +23,7 @@ yPlusLimit = 495
 bullets = []
 opening = True
 running = False
-level = 0
+level = 2
 
 # 미디어 변수
 bulletImg = None
@@ -100,7 +100,32 @@ def Opener(timing, x, y, image, size, angle, speed):
     return a
 
 
-f = open("pattern1.ptn", "r")  # File Read
+if level == 1:
+    f = open("./data/pattern1.ptn", "r")
+    try:
+        bulletImg = [pygame.image.load("./img/15_1.png"), pygame.image.load("./img/15_2.png"),
+                     pygame.image.load("./img/15_3.png"), pygame.image.load("./img/15_4.png"),
+                     pygame.image.load("./img/15_5.png"), pygame.image.load("./img/25_1.png"),
+                     pygame.image.load("./img/25_2.png"), pygame.image.load("./img/25_3.png"),
+                     pygame.image.load("./img/25_4.png"), pygame.image.load("./img/25_5.png"),
+                     ]
+        playerImg = pygame.transform.scale(pygame.image.load("./img/player.png"), (37, 64))
+        background = [pygame.image.load("./img/backgroundTest.jpg")]
+        musics = ["./audio/Armageddon.ogg"]
+
+    except Exception as err:
+        print('그림 또는 효과음 삽입에 문제가 있습니다.: ', err)
+        pygame.quit()
+        sys.exit(0)
+elif level == 2:
+    f = open("./data/pattern2.ptn", "r")
+    bulletImg = [pygame.image.load("./img/15_5.png"), pygame.image.load("./img/15_black.png"),
+                 pygame.image.load("./img/15_white.png"), pygame.image.load("./img/15_grey.png")
+                 ]
+    playerImg = pygame.transform.scale(pygame.image.load("./img/player.png"), (37, 64))
+    background = [pygame.image.load("./img/backgroundTest.jpg")]
+    musics = ["./audio/Pictured as Perfect.mp3"]
+# File Read
 cr = 0
 timingPoints = []
 patterns = []
@@ -154,7 +179,7 @@ f.close()
 
 def Text(arg1, x, y):
     font = pygame.font.Font("./fonts/HeirofLightRegular.ttf", 18)
-    text = font.render("TIMING  " + str(arg1).zfill(10), True, (0, 0, 0))
+    text = font.render("TIMING  " + str(arg1).zfill(10), True, (255,255,255))
     textRect = text.get_rect()
     textRect.centerx = x
     textRect.centery = y
@@ -181,7 +206,7 @@ length = len(patterns)
 bullets = []
 for _ in range(500):
     bullets.append(BulletShow(None, None, None, None, None, None, None, False, None, None)) # Tmg, img, siz, sx, sy, ang, spd, sta, x, y
-while running and level == 1:
+while running:
     if isStart:
         pygame.mixer.music.load(musics[0])
         pygame.mixer.music.play()
@@ -189,8 +214,8 @@ while running and level == 1:
         print(start)
         isStart = False
     nowTime = int(round(time.time() * 1000))
-    screen.fill((255, 255, 255))  # 회색 화면
-    screen.blit(background[0], (0, 0))
+    screen.fill((0,0,0))  # 회색 화면
+    # screen.blit(background[0], (0, 0))
 
     Text(nowTime-start, 520, 30)
     playerPos = (x - 12, y - 22)
