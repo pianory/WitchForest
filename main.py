@@ -9,6 +9,7 @@ import time
 pygame.init()
 pygame.mixer.init()
 screen = pygame.display.set_mode((640, 640))
+pygame.display.set_caption("마녀의 숲")
 
 # 기본 변수
 FPS = 60
@@ -65,8 +66,11 @@ class BulletPlayer(Bullet):
 
     def show(self, playerX, playerY):
         self.angle = math.atan(
-            (playerY - self.startY) / (playerX - self.startX+0.0001)) / math.pi if playerX > self.startX else (math.pi + math.atan(
-            (playerY - self.startY) / (playerX - self.startX+0.0001))) / math.pi
+            (playerY - self.startY) / (playerX - self.startX + 0.0001)) / math.pi if playerX > self.startX else (
+                                                                                                                            math.pi + math.atan(
+                                                                                                                        (
+                                                                                                                                    playerY - self.startY) / (
+                                                                                                                                    playerX - self.startX + 0.0001))) / math.pi
 
 
 class BulletShow:
@@ -79,6 +83,20 @@ class BulletShow:
         global FPS
         self.x = self.startX + math.cos(self.angle * math.pi) * self.speed * (c - self.timing) / 1000 * FPS
         self.y = self.startY + math.sin(self.angle * math.pi) * self.speed * (c - self.timing) / 1000 * FPS
+
+
+class Object:
+    def __init__(self, start, end, image, x, y, speed, moveAngle, status, startX, startY, width, height):
+        self.start, self.end, self.image, self.x, self.y, self.speed, self.moveAngle, self.status = start, end, image, x, y, speed, moveAngle, status
+        self.startX, self.startY = startX, startY
+        self.height, self.width = height, width
+
+    def go(self, c):
+        self.x = self.startX + math.cos(self.moveAngle * math.pi) * self.speed * (c - self.start) / 1000 * FPS
+        self.y = self.startY + math.sin(self.moveAngle * math.pi) * self.speed * (c - self.start) / 1000 * FPS
+
+    def __eq__(self, other):
+        return self.start == other.start and self.startX == other.startX and self.startY == other.startY and self.end == other.end and self.speed == other.speed and self.moveAngle == other.moveAngle
 
 
 def Circle(timing, x, y, image, size, angle, speed, shift):
@@ -112,6 +130,7 @@ if level == 1:
         playerImg = pygame.transform.scale(pygame.image.load("./img/player.png"), (37, 64))
         background = [pygame.image.load("./img/backgroundTest.jpg")]
         musics = ["./audio/Armageddon.ogg"]
+        objectImg = []
 
     except Exception as err:
         print('그림 또는 효과음 삽입에 문제가 있습니다.: ', err)
@@ -119,21 +138,30 @@ if level == 1:
         sys.exit(0)
 elif level == 2:
     f = open("./data/pattern2.ptn", "r")
-    bulletImg = [pygame.image.load("./img/15_5.png"), pygame.image.load("./img/15_black.png"),
-                 pygame.image.load("./img/15_white.png"), pygame.image.load("./img/15_grey.png")
-                 ]
-    playerImg = pygame.transform.scale(pygame.image.load("./img/player.png"), (37, 64))
-    background = [pygame.image.load("./img/backgroundTest.jpg")]
-    musics = ["./audio/Pictured as Perfect.mp3"]
+    try:
+        bulletImg = [pygame.image.load("./img/15_5.png"), pygame.image.load("./img/15_black.png"),
+                     pygame.image.load("./img/15_white.png"), pygame.image.load("./img/15_grey.png"),
+                     pygame.image.load("./img/25_black.png"), pygame.image.load("./img/25_white.png")
+                     ]
+        playerImg = pygame.transform.scale(pygame.image.load("./img/player.png"), (37, 64))
+        background = [pygame.image.load("./img/backgroundTest.jpg")]
+        musics = ["./audio/Pictured as Perfect.mp3"]
+        objectImg = [pygame.image.load("./img/pictasperf_warn.png")]
+
+    except Exception as err:
+        print('그림 또는 효과음 삽입에 문제가 있습니다.: ', err)
+        pygame.quit()
+        sys.exit(0)
 # File Read
 cr = 0
 timingPoints = []
 patterns = []
 cur = []
-nowLine=0
+nowLine = 0
 while True:
-    # print(nowLine)
     line = f.readline()
+    # print(line)
+    if line == "=====\n": break
     if not line: break
     p = list(map(str, line.split()))
     if cr == int(p[0]):
@@ -174,38 +202,71 @@ while True:
     # nowLine += 1
 timingPoints.append(cr)
 patterns.append(cur)
+objectTimingPoints = []
+objects = []
+cr = 0
+cur = []
+while True:  # Objects
+    line = f.readline()
+    if not line: break
+    p = list(map(float, line.split()))
+    if cr == int(p[0]):
+        cur.append(
+            Object(p[0], p[1], objectImg[int(p[4])], p[2], p[3], p[8], p[7], False, p[2], p[3], p[5], p[6])
+        )
+    else:
+        if cr != 0:
+            objects.append(cur)
+            objectTimingPoints.append(cr)
+        cur = []
+        cr = int(p[0])
+        cur.append(
+            Object(p[0], p[1], objectImg[int(p[4])], p[2], p[3], p[8], p[7], False, p[2], p[3], p[5], p[6])
+        )
+    # nowLine += 1
+objectTimingPoints.append(cr)
+objects.append(cur)
+
 f.close()
 
 
 def Text(arg1, x, y):
     font = pygame.font.Font("./fonts/HeirofLightRegular.ttf", 18)
-    text = font.render("TIMING  " + str(arg1).zfill(10), True, (255,255,255))
+    text = font.render("TIMING  " + str(arg1).zfill(10), True, (255, 255, 255))
     textRect = text.get_rect()
     textRect.centerx = x
     textRect.centery = y
     screen.blit(text, textRect)
 
 
+a = [pygame.image.load("./img/a.png"), pygame.image.load("./img/b.png")]
+
 warnLine, line = [], []
 while opening:
+    screen.fill((0, 0, 0))  # 회색 화면
+    key = pygame.key.get_pressed()
+    if key[pygame.K_SPACE]:
+        opening = False
+        running = True
+        level = 1
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit(0)
-    key = pygame.key.get_pressed()
-    if key[pygame.K_SPACE]:
-        opening = False
-    running = True
-    level = 1
 isStart = True
 
 i = 0
 q = 0
 patternNo = 0
+objectNo = 0
 length = len(patterns)
+objectLength = len(objects)
 bullets = []
-for _ in range(500):
-    bullets.append(BulletShow(None, None, None, None, None, None, None, False, None, None)) # Tmg, img, siz, sx, sy, ang, spd, sta, x, y
+showingObjects = []
+hp = 100
+for _ in range(1000):
+    bullets.append(BulletShow(None, None, None, None, None, None, None, False, None,
+                              None))  # Tmg, img, siz, sx, sy, ang, spd, sta, x, y
 while running:
     if isStart:
         pygame.mixer.music.load(musics[0])
@@ -214,10 +275,12 @@ while running:
         print(start)
         isStart = False
     nowTime = int(round(time.time() * 1000))
-    screen.fill((0,0,0))  # 회색 화면
+    screen.fill((0, 0, 0))  # 회색 화면
     # screen.blit(background[0], (0, 0))
 
-    Text(nowTime-start, 520, 30)
+    # screen.blit(a[0], (0, 300))
+    # screen.blit(a[1], (300, 300))
+    Text(nowTime - start, 520, 30)
     playerPos = (x - 12, y - 22)
     screen.blit(playerImg, playerPos)
 
@@ -263,6 +326,13 @@ while running:
             if y <= yPlusLimit:
                 y += 1.5 * fast
                 if y > yPlusLimit: y = yPlusLimit
+
+    if objectLength > objectNo:
+        if nowTime - start >= int(objectTimingPoints[objectNo]):
+            showingObjects.extend(objects[objectNo])
+            objectNo += 1
+            print(showingObjects)
+
     if length > patternNo:
         if nowTime - start >= int(timingPoints[patternNo]):
             j = 0
@@ -271,7 +341,8 @@ while running:
             i = 0
             while j < len(patterns[patternNo]):
                 if not bullets[i].status:
-                    bullets[i].timing, bullets[i].image, bullets[i].size, bullets[i].startX, bullets[i].startY, bullets[i].angle, bullets[i].speed, bullets[i].x, bullets[i].y \
+                    bullets[i].timing, bullets[i].image, bullets[i].size, bullets[i].startX, bullets[i].startY, bullets[
+                        i].angle, bullets[i].speed, bullets[i].x, bullets[i].y \
                         = curr.timing, curr.image, curr.size, curr.startX, curr.startY, curr.angle, curr.speed, curr.x, curr.y
                     bullets[i].status = True
                     j += 1
@@ -281,17 +352,20 @@ while running:
                     curr.show(x, y)
                 i += 1
             patternNo += 1
+    for i in showingObjects:
+        i.go(nowTime - start)
+        screen.blit(i.image, (int(int(i.x) - i.width / 2), int(int(i.y) - i.height / 2)))
+        if nowTime - start >= i.end:
+            showingObjects.remove(i)
     for i in bullets:
         if i.status:
             i.go(nowTime - start)
             if i.x < -10 or i.x > 410 or i.y < -10 or i.y > 510:
                 i.status = False
             else:
-                # if (i.x - x) ** 2 + (i.y - y) ** 2 < (i.size / 2) ** 2:
-                #     bullets = []
-                #     for _ in range(500):
-                #         bullets.append(BulletShow(None, None, None, None, None, None, None, False, None, None)) # Tmg, img, siz, sx, sy, ang, spd, sta, x, y
-                #     break
+                if (i.x - x) ** 2 + (i.y - y) ** 2 < (i.size / 2) ** 2:
+                    i.status = False
+                hp -= 10
                 screen.blit(i.image, (int(int(i.x) - i.size / 2), int(int(i.y) - i.size / 2)))
     fpsClock.tick(FPS)
     pygame.display.flip()
