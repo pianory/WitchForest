@@ -281,6 +281,10 @@ while running:
     # screen.blit(a[0], (0, 300))
     # screen.blit(a[1], (300, 300))
     Text(nowTime - start, 520, 30)
+    if objectLength > objectNo:
+        if nowTime - start >= int(objectTimingPoints[objectNo]):
+            showingObjects.extend(objects[objectNo])
+            objectNo += 1
     playerPos = (x - 12, y - 22)
     screen.blit(playerImg, playerPos)
 
@@ -327,11 +331,6 @@ while running:
                 y += 1.5 * fast
                 if y > yPlusLimit: y = yPlusLimit
 
-    if objectLength > objectNo:
-        if nowTime - start >= int(objectTimingPoints[objectNo]):
-            showingObjects.extend(objects[objectNo])
-            objectNo += 1
-            print(showingObjects)
 
     if length > patternNo:
         if nowTime - start >= int(timingPoints[patternNo]):
