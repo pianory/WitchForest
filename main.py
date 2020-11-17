@@ -41,8 +41,9 @@ try:
                  pygame.image.load("./img/25_4.png"), pygame.image.load("./img/25_5.png"),
                  ]
     playerImg = pygame.transform.scale(pygame.image.load("./img/player.png"), (37, 64))
-    background = [pygame.image.load("./img/backgroundTest.jpg")]
+    background = [pygame.image.load("./img/background.png")]
     musics = ["./audio/Armageddon.ogg"]
+    a = [pygame.image.load("./img/danger.png")]
 
 except Exception as err:
     print('그림 또는 효과음 삽입에 문제가 있습니다.: ', err)
@@ -66,11 +67,7 @@ class BulletPlayer(Bullet):
 
     def show(self, playerX, playerY):
         self.angle = math.atan(
-            (playerY - self.startY) / (playerX - self.startX + 0.0001)) / math.pi if playerX > self.startX else (
-                                                                                                                            math.pi + math.atan(
-                                                                                                                        (
-                                                                                                                                    playerY - self.startY) / (
-                                                                                                                                    playerX - self.startX + 0.0001))) / math.pi
+            (playerY - self.startY) / (playerX - self.startX + 0.0001)) / math.pi if playerX > self.startX else (math.pi + math.atan((playerY - self.startY) / (playerX - self.startX + 0.0001))) / math.pi
 
 
 class BulletShow:
@@ -95,8 +92,10 @@ class Object:
         self.x = self.startX + math.cos(self.moveAngle * math.pi) * self.speed * (c - self.start) / 1000 * FPS
         self.y = self.startY + math.sin(self.moveAngle * math.pi) * self.speed * (c - self.start) / 1000 * FPS
 
-    def __eq__(self, other):
-        return self.start == other.start and self.startX == other.startX and self.startY == other.startY and self.end == other.end and self.speed == other.speed and self.moveAngle == other.moveAngle
+
+class Line:
+    def __init__(self, start, end, color, startX, startY, endX, endY, thickness):
+        self.start, self.end, self.color, self.startX, self.startY, self.endX, self.endY, self.thickness = start, end, color, startX, startY, endX, endY, thickness
 
 
 def Circle(timing, x, y, image, size, angle, speed, shift):
@@ -128,7 +127,7 @@ if level == 1:
                      pygame.image.load("./img/25_4.png"), pygame.image.load("./img/25_5.png"),
                      ]
         playerImg = pygame.transform.scale(pygame.image.load("./img/player.png"), (37, 64))
-        background = [pygame.image.load("./img/backgroundTest.jpg")]
+        background = [pygame.image.load("./img/background.png")]
         musics = ["./audio/Armageddon.ogg"]
         objectImg = []
 
@@ -144,7 +143,7 @@ elif level == 2:
                      pygame.image.load("./img/25_black.png"), pygame.image.load("./img/25_white.png")
                      ]
         playerImg = pygame.transform.scale(pygame.image.load("./img/player.png"), (37, 64))
-        background = [pygame.image.load("./img/backgroundTest.jpg")]
+        background = [pygame.image.load("./img/background.png")]
         musics = ["./audio/Pictured as Perfect.mp3"]
         objectImg = [pygame.image.load("./img/pictasperf_warn.png")]
 
@@ -208,6 +207,7 @@ cr = 0
 cur = []
 while True:  # Objects
     line = f.readline()
+    if line == "=====\n": break
     if not line: break
     p = list(map(float, line.split()))
     if cr == int(p[0]):
@@ -224,8 +224,34 @@ while True:  # Objects
             Object(p[0], p[1], objectImg[int(p[4])], p[2], p[3], p[8], p[7], False, p[2], p[3], p[5], p[6])
         )
     # nowLine += 1
-objectTimingPoints.append(cr)
-objects.append(cur)
+if len(cur) > 0:
+    objectTimingPoints.append(cr)
+    objects.append(cur)
+drawingTimingPoints = []
+drawings = []
+cr = 0
+cur = []
+while True:  # Objects
+    line = f.readline()
+    if line == "=====\n": break
+    if not line: break
+    p = list(map(str, line.split()))
+    red, green, blue = map(int, p[2].split(";"))
+    if cr == int(p[0]):
+        cur.append(Line(int(p[0]), int(p[1]), (red, green, blue), float(p[3]), float(p[4]), float(p[5]), float(p[6]),
+                        float(p[7])))
+    else:
+        if cr != 0:
+            drawings.append(cur)
+            drawingTimingPoints.append(cr)
+        cur = []
+        cr = int(p[0])
+        cur.append(Line(int(p[0]), int(p[1]), (red, green, blue), float(p[3]), float(p[4]), float(p[5]), float(p[6]),
+                        float(p[7])))
+    # nowLine += 1
+if len(cur) > 0:
+    drawingTimingPoints.append(cr)
+    drawings.append(cur)
 
 f.close()
 
@@ -239,7 +265,27 @@ def Text(arg1, x, y):
     screen.blit(text, textRect)
 
 
-a = [pygame.image.load("./img/a.png"), pygame.image.load("./img/b.png")]
+def showHP(arg):
+    font = pygame.font.Font("./fonts/HeirofLightBold.ttf", 20)
+    text = font.render("HP  " + str(arg).zfill(3), True, (255, 100, 100))
+    textRect = text.get_rect()
+    textRect.centerx = 50
+    textRect.centery = 570
+    screen.blit(text, textRect)
+    if arg < 0:
+        green = 0
+        blue = 0
+        red = 255
+    elif arg < 50:
+        green = int(arg * 2.55)
+        blue = 0
+        red = 255 - int(255/50*arg)
+    else:
+        blue = int((arg - 50) * 2.55)
+        green = int((100 - arg) * 2.55)
+        red = 0
+    pygame.draw.line(screen, (red, green, blue), [100, 570], [100+int(arg*3), 570], 30)
+
 
 warnLine, line = [], []
 while opening:
@@ -259,14 +305,21 @@ i = 0
 q = 0
 patternNo = 0
 objectNo = 0
+drawingNo = 0
 length = len(patterns)
 objectLength = len(objects)
+drawingLength = len(drawings)
 bullets = []
 showingObjects = []
+showingDrawings = []
 hp = 100
 for _ in range(1000):
     bullets.append(BulletShow(None, None, None, None, None, None, None, False, None,
                               None))  # Tmg, img, siz, sx, sy, ang, spd, sta, x, y
+for _ in range(30):
+    showingObjects.append(Object(None, None, None, None, None, None, None, False, None, None, None, None))
+for _ in range(100):
+    showingDrawings.append(Line(None, None, None, None, None, None, None, None))
 while running:
     if isStart:
         pygame.mixer.music.load(musics[0])
@@ -274,20 +327,56 @@ while running:
         start = int(round(time.time() * 1000))
         print(start)
         isStart = False
+        previous = start
     nowTime = int(round(time.time() * 1000))
     screen.fill((0, 0, 0))  # 회색 화면
-    # screen.blit(background[0], (0, 0))
+    if nowTime - previous > 1000:
+        previous += 1000
+        if hp < 100:
+            hp += 1
+    screen.blit(background[0], (0, 0))
 
-    # screen.blit(a[0], (0, 300))
+    # screen.blit(a[0], (5, 5))
     # screen.blit(a[1], (300, 300))
     Text(nowTime - start, 520, 30)
-    if objectLength > objectNo:
+    if objectLength > objectNo and objectLength > 0:
         if nowTime - start >= int(objectTimingPoints[objectNo]):
-            showingObjects.extend(objects[objectNo])
+            j = 0
+            curr = objects[objectNo][j]
+            i = 0
+            while j < len(objects[objectNo]):
+                if not showingObjects[i].status:
+                    showingObjects[i].start, showingObjects[i].end, showingObjects[i].image, showingObjects[i].x, \
+                    showingObjects[i].y, showingObjects[i].speed, showingObjects[i].moveAngle, showingObjects[i].startX, \
+                    showingObjects[i].startY, showingObjects[i].width, showingObjects[
+                        i].height = curr.start, curr.end, curr.image, curr.x, curr.y, curr.speed, curr.moveAngle, curr.startX, curr.startY, curr.width, curr.height
+                    showingObjects[i].status = True
+                    j += 1
+                    if j >= len(objects[objectNo]):
+                        break
+                    curr = objects[objectNo][j]
+                i += 1
             objectNo += 1
+    if drawingLength > drawingNo and drawingLength > 0:
+        if nowTime - start >= int(drawingTimingPoints[drawingNo]):
+            j = 0
+            curr = drawings[drawingNo][j]
+            i = 0
+            while j < len(drawings[drawingNo]):
+                if showingDrawings[i].end is None or showingDrawings[i].end < nowTime - start:
+                    showingDrawings[i].start, showingDrawings[i].end, showingDrawings[i].color, showingDrawings[
+                        i].startX, showingDrawings[i].startY, showingDrawings[i].endX, showingDrawings[i].endY, \
+                    showingDrawings[
+                        i].thickness = curr.start, curr.end, curr.color, curr.startX, curr.startY, curr.endX, curr.endY, curr.thickness
+                    j += 1
+                    if j >= len(drawings[drawingNo]):
+                        break
+                    curr = drawings[drawingNo][j]
+                i += 1
+            drawingNo += 1
     playerPos = (x - 12, y - 22)
     screen.blit(playerImg, playerPos)
-
+    showHP(hp)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -331,7 +420,6 @@ while running:
                 y += 1.5 * fast
                 if y > yPlusLimit: y = yPlusLimit
 
-
     if length > patternNo:
         if nowTime - start >= int(timingPoints[patternNo]):
             j = 0
@@ -352,10 +440,17 @@ while running:
                 i += 1
             patternNo += 1
     for i in showingObjects:
-        i.go(nowTime - start)
-        screen.blit(i.image, (int(int(i.x) - i.width / 2), int(int(i.y) - i.height / 2)))
-        if nowTime - start >= i.end:
-            showingObjects.remove(i)
+        if i.status:
+            i.go(nowTime - start)
+            if i.end < nowTime - start:
+                i.status = False
+            else:
+                screen.blit(i.image, (int(int(i.x) - i.width / 2), int(int(i.y) - i.height / 2)))
+    for i in showingDrawings:
+        if i.end is not None:
+            if i.end > nowTime - start:
+                pygame.draw.line(screen, i.color, [int(i.startX), int(i.startY)], [int(i.endX), int(i.endY)],
+                                 int(i.thickness))
     for i in bullets:
         if i.status:
             i.go(nowTime - start)
@@ -364,7 +459,7 @@ while running:
             else:
                 if (i.x - x) ** 2 + (i.y - y) ** 2 < (i.size / 2) ** 2:
                     i.status = False
-                hp -= 10
+                    hp -= 5
                 screen.blit(i.image, (int(int(i.x) - i.size / 2), int(int(i.y) - i.size / 2)))
     fpsClock.tick(FPS)
     pygame.display.flip()
