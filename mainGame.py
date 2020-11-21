@@ -6,12 +6,13 @@ import time
 
 # -*- coding:utf-8 -*-#
 
+# 01 - Main Game Setting
 pygame.init()
 pygame.mixer.init()
 screen = pygame.display.set_mode((640, 640))
 pygame.display.set_caption("마녀의 숲")
 
-# 기본 변수
+# 02 - Normal Variable
 FPS = 60
 fpsClock = pygame.time.Clock()
 score = 0
@@ -25,15 +26,20 @@ bullets = []
 opening = True
 running = False
 level = 2
-
-# 미디어 변수
-bulletImg = None
-playerImg = None
-gameOverImg = None
 x = 200
 y = 480
+keys = [pygame.K_d, pygame.K_f, pygame.K_j, pygame.K_k]
+hiSpeed = 1
+
+# 02-01 - All Images
+judgeImg = [pygame.image.load("./img/25_3.png"), pygame.image.load("./img/25_2.png"),
+            pygame.image.load("./img/25_4.png"),
+            pygame.image.load("./img/25_5.png"), pygame.image.load("./img/25_1.png")]
+noteImg = [pygame.image.load("./img/note1.png").convert(), pygame.image.load("./img/note2.png").convert(),
+           pygame.image.load("./img/note1L.png").convert(), pygame.image.load("./img/note2L.png").convert()]
 
 
+# 03-01 - Class Bullet
 class Bullet:
     def __init__(self, timing, x, y, image, size, angle, speed, startX, startY):
         self.x, self.y, self.image, self.size, self.angle, self.speed, self.timing = x, y, image, size, angle, speed, timing
@@ -43,6 +49,7 @@ class Bullet:
         pass
 
 
+# 03-02 - Class Bullet to Player
 class BulletPlayer(Bullet):
     def __init__(self, timing, x, y, image, size, playerposX, playerposY, speed, startX, startY, angle):
         super().__init__(timing, x, y, image, size, angle, speed, startX, startY)
@@ -50,9 +57,14 @@ class BulletPlayer(Bullet):
 
     def show(self, playerX, playerY):
         self.angle = math.atan(
-            (playerY - self.startY) / (playerX - self.startX + 0.0001)) / math.pi if playerX > self.startX else (math.pi + math.atan((playerY - self.startY) / (playerX - self.startX + 0.0001))) / math.pi
+            (playerY - self.startY) / (playerX - self.startX + 0.0001)) / math.pi if playerX > self.startX else (
+                                                                                                                        math.pi + math.atan(
+                                                                                                                    (
+                                                                                                                            playerY - self.startY) / (
+                                                                                                                            playerX - self.startX + 0.0001))) / math.pi
 
 
+# 03-03 - Class Bullet Showed to Screen
 class BulletShow:
     def __init__(self, timing, image, size, startX, startY, angle, speed, status, x, y):
         self.timing, self.image, self.size, self.startX, self.startY, self.angle, self.status = timing, image, size, startX, startY, angle, status
@@ -65,6 +77,7 @@ class BulletShow:
         self.y = self.startY + math.sin(self.angle * math.pi) * self.speed * (c - self.timing) / 1000 * FPS
 
 
+# 03-04 - Class Objective
 class Object:
     def __init__(self, start, end, image, x, y, speed, moveAngle, status, startX, startY, width, height):
         self.start, self.end, self.image, self.x, self.y, self.speed, self.moveAngle, self.status = start, end, image, x, y, speed, moveAngle, status
@@ -76,11 +89,13 @@ class Object:
         self.y = self.startY + math.sin(self.moveAngle * math.pi) * self.speed * (c - self.start) / 1000 * FPS
 
 
+# 03-05 - Class Draws Line
 class Line:
     def __init__(self, start, end, color, startX, startY, endX, endY, thickness):
         self.start, self.end, self.color, self.startX, self.startY, self.endX, self.endY, self.thickness = start, end, color, startX, startY, endX, endY, thickness
 
 
+# 03-06 - Function makes circle pattern
 def Circle(timing, x, y, image, size, angle, speed, shift):
     global FPS
     a = []
@@ -91,6 +106,7 @@ def Circle(timing, x, y, image, size, angle, speed, shift):
     return a
 
 
+# 03-07 - Function that opens
 def Opener(timing, x, y, image, size, angle, speed):
     global FPS
     a = []
@@ -100,8 +116,62 @@ def Opener(timing, x, y, image, size, angle, speed):
     return a
 
 
+# 03-08 - Judgements
+def Judgement(accuracy):
+    if (accuracy - 1) % 40 == 0:
+        return 101
+    elif (accuracy - 1) % 40 == 1:
+        return 100
+    elif (accuracy - 1) % 40 == 2:
+        return 90
+    elif (accuracy - 1) % 40 == 3:
+        return 70
+    elif (accuracy - 1) % 40 == 4:
+        return 40
+    else:
+        return 1
+
+
+# 03-09 - Note
+class Note:
+    type = "short"
+
+    def __init__(self, lane, timing, status, num):
+        self.lane, self.timing, self.status = lane, timing, status
+        self.x, self.y = 0, 0
+        self.num = num
+
+    def go(self, curr, x):
+        self.x = x
+        self.y = 450 - (timing - curr) / 1000 * 450 * hiSpeed
+
+    def HIT(self, curr, curNum):
+        if status and curNum == self.num and abs(timing - curr) <= 320:
+            self.status = False
+            return Judgement(abs(timing - curr))
+
+# 03-10 - Long Note
+class LongNote(Note):
+    type = "long"
+
+    def __init__(self, lane, timing, status, num, end):
+        super().__init__(lane, timing, status, num)
+        self.end = end
+        self.x, self.y = 0, 0
+        self.num = num
+
+    def HIT(self, curr, curNum):
+        if status and curNum == self.num:
+            if timing <= curr <= end:
+                return 10
+            elif curr > end:
+                self.status = False
+                return 101
+
+
+# 04 - Loads Level Medias
 if level == 1:
-    f = open("./data/pattern1.ptn", "r")
+    f = [open("./data/pattern1.ptn", "r"), open("./data/rhythm1.ptn", "r")]
     try:
         bulletImg = [pygame.image.load("./img/15_1.png"), pygame.image.load("./img/15_2.png"),
                      pygame.image.load("./img/15_3.png"), pygame.image.load("./img/15_4.png"),
@@ -120,7 +190,7 @@ if level == 1:
         sys.exit(0)
 
 elif level == 2:
-    f = open("./data/pattern2.ptn", "r")
+    f = [open("./data/pattern2.ptn", "r"), open("./data/rhythm2.ptn", "r")]
     try:
         bulletImg = [pygame.image.load("./img/15_5.png"), pygame.image.load("./img/15_black.png"),
                      pygame.image.load("./img/15_white.png"), pygame.image.load("./img/15_grey.png"),
@@ -135,14 +205,15 @@ elif level == 2:
         print('그림 또는 효과음 삽입에 문제가 있습니다.: ', err)
         pygame.quit()
         sys.exit(0)
-# File Read
+
+# 05 - Reads File
 cr = 0
 timingPoints = []
 patterns = []
 cur = []
 nowLine = 0
-while True:
-    line = f.readline()
+while True:  # 05-01 - Reading Patterns
+    line = f[0].readline()
     # print(line)
     if line == "=====\n": break
     if not line: break
@@ -189,8 +260,8 @@ objectTimingPoints = []
 objects = []
 cr = 0
 cur = []
-while True:  # Objects
-    line = f.readline()
+while True:  # 05-02 - Reading Objects
+    line = f[0].readline()
     if line == "=====\n": break
     if not line: break
     p = list(map(float, line.split()))
@@ -215,8 +286,8 @@ drawingTimingPoints = []
 drawings = []
 cr = 0
 cur = []
-while True:  # Objects
-    line = f.readline()
+while True:  # 05-03 Reading Lines
+    line = f[0].readline()
     if line == "=====\n": break
     if not line: break
     p = list(map(str, line.split()))
@@ -237,9 +308,10 @@ if len(cur) > 0:
     drawingTimingPoints.append(cr)
     drawings.append(cur)
 
-f.close()
+f[0].close()
 
 
+# 06 - Other Functions
 def Text(arg1, x, y):
     font = pygame.font.Font("./fonts/HeirofLightRegular.ttf", 18)
     text = font.render("TIMING  " + str(arg1).zfill(10), True, (255, 255, 255))
@@ -258,20 +330,20 @@ def showHP(arg):
     elif arg < 500:
         green = int(arg * 2.55 / 10)
         blue = 0
-        red = 255 - int(255/500*arg)
+        red = 255 - int(255 / 500 * arg)
     else:
         blue = int((arg - 500) * 2.55 / 10)
         green = int((1000 - arg) * 2.55 / 10)
         red = 0
-    pygame.draw.line(screen, (red, green, blue), [100, 570], [100+int(arg*3)/10, 570], 30)
-    text = font.render("HP  " + str(arg).zfill(3), True, (red//2+128, green//2+128, blue//2+128))
+    pygame.draw.line(screen, (red, green, blue), [100, 570], [100 + int(arg * 3) / 10, 570], 30)
+    text = font.render("HP  " + str(arg).zfill(3), True, (red // 2 + 128, green // 2 + 128, blue // 2 + 128))
     textRect = text.get_rect()
     textRect.centerx = 50
     textRect.centery = 570
     screen.blit(text, textRect)
 
 
-warnLine, line = [], []
+# 07 - Main Page(Menu)
 while opening:
     screen.fill((0, 0, 0))  # 회색 화면
     key = pygame.key.get_pressed()
@@ -285,17 +357,10 @@ while opening:
             sys.exit(0)
 isStart = True
 
-i = 0
-q = 0
-patternNo = 0
-objectNo = 0
-drawingNo = 0
-length = len(patterns)
-objectLength = len(objects)
-drawingLength = len(drawings)
-bullets = []
-showingObjects = []
-showingDrawings = []
+# 08 - Gaming
+patternNo, objectNo, drawingNo = 0, 0, 0
+length, objectLength, drawingLength = len(patterns), len(objects), len(drawings)
+bullets, showingObjects, showingDrawings = [], [], []
 hp = 1000
 for _ in range(1000):
     bullets.append(BulletShow(None, None, None, None, None, None, None, False, None,
@@ -304,7 +369,10 @@ for _ in range(30):
     showingObjects.append(Object(None, None, None, None, None, None, None, False, None, None, None, None))
 for _ in range(100):
     showingDrawings.append(Line(None, None, None, None, None, None, None, None))
-while running:
+
+avoiding = True
+# 09 - Main Game / Avoiding
+while avoiding:
     if isStart:
         pygame.mixer.music.load(musics[0])
         pygame.mixer.music.play()
@@ -313,11 +381,7 @@ while running:
         isStart = False
         previous = start
     nowTime = int(round(time.time() * 1000))
-    screen.fill((0, 0, 0))  # 회색 화면
-
-    # screen.blit(a[0], (5, 5))
-    # screen.blit(a[1], (300, 300))
-    Text(nowTime - start, 520, 30)
+    screen.fill((0, 0, 0))
     if objectLength > objectNo and objectLength > 0:
         if nowTime - start >= int(objectTimingPoints[objectNo]):
             j = 0
@@ -353,7 +417,7 @@ while running:
                     curr = drawings[drawingNo][j]
                 i += 1
             drawingNo += 1
-    playerPos = (x - 37/2, y - 32)
+    playerPos = (x - 37 / 2, y - 32)
     screen.blit(playerImg, playerPos)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -447,6 +511,71 @@ while running:
     screen.blit(background[0], (0, 0))
     showHP(hp)
     pygame.display.flip()
+    if nowTime - start > timingPoints[-1] + 50000:
+        avoiding = False
+    if hp < 0:
+        avoiding, running = False, False
+# rhythm = True
+# while rhythm:
+lane1, lane2, lane3, lane4 = 0, 0, 0, 0
+cur = []
+cr = 0
+while True:  # 10-01 - Reading Rhythm Patterns
+    line = f[0].readline()
+    # print(line)
+    if line == "=====\n": break
+    if not line: break
+    p = list(map(str, line.split()))
+    if cr == int(p[0]):
+        if p[1] == "N":
+            if int(p[2]) == 1:
+                cur.append(Note(int(p[2]), int(p[0]), False, lane1))
+                lane1 += 1
+            elif int(p[2]) == 2:
+                cur.append(Note(int(p[2]), int(p[0]), False, lane2))
+                lane2 += 1
+            elif int(p[2]) == 3:
+                cur.append(Note(int(p[2]), int(p[0]), False, lane3))
+                lane3 += 1
+            elif int(p[2]) == 4:
+                cur.append(Note(int(p[2]), int(p[0]), False, lane4))
+                lane4 += 1
+        if p[1] == "L":
+            if int(p[2]) == 1:
+                cur.append(Note(int(p[2]), int(p[0]), False, lane1))
+                lane1 += 1
+            elif int(p[2]) == 2:
+                cur.append(Note(int(p[2]), int(p[0]), False, lane2))
+                lane2 += 1
+            elif int(p[2]) == 3:
+                cur.append(Note(int(p[2]), int(p[0]), False, lane3))
+                lane3 += 1
+            elif int(p[2]) == 4:
+                cur.append(Note(int(p[2]), int(p[0]), False, lane4))
+                lane4 += 1
+    else:
+        if cr != 0:
+            patterns.append(cur)
+            timingPoints.append(cr)
+        cur = []
+        cr = int(p[0])
+        if p[1] == "C":
+            r, s = p[7].split(";")
+            cur.extend(
+                Circle(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), float(r), float(p[6]),
+                       float(s)))
+        elif p[1] == "L":
+            cur.append(Bullet(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), float(p[7]),
+                              float(p[6]) * 60 / FPS, float(p[2]), float(p[3])))
+        elif p[1] == "E":
+            cur.append(BulletPlayer(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), None, None,
+                                    float(p[6]) * 60 / FPS, float(p[2]), float(p[3]), 0))
+        elif p[1] == "O":
+            cur.extend(
+                Opener(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), float(p[7]), p[6]))
+    # nowLine += 1
+timingPoints.append(cr)
+patterns.append(cur)
 
 screen.blit(gameOverImg, (0, 0))
 Text(score, screen.get_rect().centerx, screen.get_rect().centery)
