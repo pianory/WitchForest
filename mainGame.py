@@ -29,13 +29,14 @@ level = 2
 x = 200
 y = 480
 keys = [pygame.K_d, pygame.K_f, pygame.K_j, pygame.K_k]
-hiSpeed = 1
+hiSpeed = 2
 
 # 02-01 - All Images
 judgeImg = [pygame.image.load("./img/25_3.png"), pygame.image.load("./img/25_2.png"),
             pygame.image.load("./img/25_4.png"),
             pygame.image.load("./img/25_5.png"), pygame.image.load("./img/25_1.png")]
 noteImg = [pygame.image.load("./img/note1.png").convert(), pygame.image.load("./img/note2.png").convert(),
+           pygame.image.load("./img/note2.png").convert(), pygame.image.load("./img/note1.png").convert(),
            pygame.image.load("./img/note1L.png").convert(), pygame.image.load("./img/note2L.png").convert()]
 
 
@@ -118,55 +119,119 @@ def Opener(timing, x, y, image, size, angle, speed):
 
 # 03-08 - Judgements
 def Judgement(accuracy):
-    if (accuracy - 1) % 40 == 0:
+    if (accuracy - 1) // 30 == 0:
         return 101
-    elif (accuracy - 1) % 40 == 1:
+    elif (accuracy - 1) // 30 == 1:
         return 100
-    elif (accuracy - 1) % 40 == 2:
-        return 90
-    elif (accuracy - 1) % 40 == 3:
+    elif (accuracy - 1) // 30 == 2:
         return 70
-    elif (accuracy - 1) % 40 == 4:
+    elif (accuracy - 1) // 30 == 3:
         return 40
+    elif (accuracy - 1) // 30 == 4:
+        return 10
     else:
-        return 1
+        return -1
 
 
 # 03-09 - Note
 class Note:
-    type = "short"
-
-    def __init__(self, lane, timing, status, num):
-        self.lane, self.timing, self.status = lane, timing, status
-        self.x, self.y = 0, 0
+    def __init__(self, timing, num):
+        self.timing = timing
+        self.y = -500
         self.num = num
 
-    def go(self, curr, x):
-        self.x = x
-        self.y = 450 - (timing - curr) / 1000 * 450 * hiSpeed
 
-    def HIT(self, curr, curNum):
-        if status and curNum == self.num and abs(timing - curr) <= 320:
-            self.status = False
-            return Judgement(abs(timing - curr))
+class ShowingNote:
+    def __init__(self, timing, num, type, status):
+        self.timing = timing
+        self.y = -500
+        self.num = num
+        self.status = status
+        self.type = type
+
+    def go(self, curr):
+        self.y = 450 - (self.timing - curr) / 1000 * 450 * hiSpeed
+
+    def HIT(self, curr):
+        if abs(self.timing - curr) <= 180:
+            return Judgement(abs(self.timing - curr))
+        else:
+            return 0
+
 
 # 03-10 - Long Note
-class LongNote(Note):
-    type = "long"
-
-    def __init__(self, lane, timing, status, num, end):
-        super().__init__(lane, timing, status, num)
+class LongNote:
+    def __init__(self, timing, num, end):
+        self.timing = timing
         self.end = end
-        self.x, self.y = 0, 0
+        self.y = -500
         self.num = num
 
+    def go(self, curr):
+        self.y = 450 - (self.timing - curr) / 1000 * 450 * hiSpeed - 15.5
+
     def HIT(self, curr, curNum):
-        if status and curNum == self.num:
-            if timing <= curr <= end:
+        if curNum == self.num:
+            if self.timing <= curr <= end:
                 return 10
             elif curr > end:
-                self.status = False
                 return 101
+
+
+class Note1(Note):
+    type = 1
+
+    def __init__(self, timing, num):
+        super().__init__(timing, num)
+
+
+class Note2(Note):
+    type = 2
+
+    def __init__(self, timing, num):
+        super().__init__(timing, num)
+
+
+class Note3(Note):
+    type = 3
+
+    def __init__(self, timing, num):
+        super().__init__(timing, num)
+
+
+class Note4(Note):
+    type = 4
+
+    def __init__(self, timing, num):
+        super().__init__(timing, num)
+
+
+class LongNote1(LongNote):
+    type = 1
+
+    def __init__(self, timing, num, end):
+        super().__init__(timing, num, end)
+
+
+class LongNote2(LongNote):
+    type = 2
+
+    def __init__(self, timing, num, end):
+        super().__init__(timing, num, end)
+
+
+class LongNote3(LongNote):
+    type = 3
+
+    def __init__(self, timing, num, end):
+        super().__init__(timing, num, end)
+
+
+class LongNote4(LongNote):
+    type = 4
+
+    def __init__(self, timing, num, end):
+        super().__init__(timing, num, end)
 
 
 # 04 - Loads Level Medias
@@ -177,7 +242,7 @@ if level == 1:
                      pygame.image.load("./img/15_3.png"), pygame.image.load("./img/15_4.png"),
                      pygame.image.load("./img/15_5.png"), pygame.image.load("./img/25_1.png"),
                      pygame.image.load("./img/25_2.png"), pygame.image.load("./img/25_3.png"),
-                     pygame.image.load("./img/25_4.png"), pygame.image.load("./img/25_5.png"),
+                     pygame.image.load("./img/25_4.png"), pygame.image.load("./img/25_5.png")
                      ]
         playerImg = pygame.transform.scale(pygame.image.load("./img/witch.png"), (37, 64))
         background = [pygame.image.load("./img/background.png")]
@@ -198,7 +263,7 @@ elif level == 2:
                      ]
         playerImg = pygame.transform.scale(pygame.image.load("./img/witch.png"), (37, 64))
         background = [pygame.image.load("./img/background.png")]
-        musics = ["./audio/Pictured as Perfect.mp3"]
+        musics = ["./audio/Pictured as Perfect.mp3", "./audio/Ultra Blazures.mp3"]
         objectImg = [pygame.image.load("./img/pictasperf_warn.png")]
 
     except Exception as err:
@@ -314,7 +379,7 @@ f[0].close()
 # 06 - Other Functions
 def Text(arg1, x, y):
     font = pygame.font.Font("./fonts/HeirofLightRegular.ttf", 18)
-    text = font.render("TIMING  " + str(arg1).zfill(10), True, (255, 255, 255))
+    text = font.render("SCORE  " + str(arg1).zfill(14), True, (255, 255, 255))
     textRect = text.get_rect()
     textRect.centerx = x
     textRect.centery = y
@@ -370,7 +435,7 @@ for _ in range(30):
 for _ in range(100):
     showingDrawings.append(Line(None, None, None, None, None, None, None, None))
 
-avoiding = True
+avoiding = False
 # 09 - Main Game / Avoiding
 while avoiding:
     if isStart:
@@ -379,7 +444,7 @@ while avoiding:
         start = int(round(time.time() * 1000))
         print(start)
         isStart = False
-        previous = start
+        previous = 0
     nowTime = int(round(time.time() * 1000))
     screen.fill((0, 0, 0))
     if objectLength > objectNo and objectLength > 0:
@@ -428,38 +493,38 @@ while avoiding:
     if key[pygame.K_LEFT]:
         if key[pygame.K_LSHIFT]:
             if x >= xMinusLimit:
-                x -= 0.5 * fast
+                x -= 0.5 * fast * (nowTime - start - previous) / 1000 * 60
                 if x < xMinusLimit: x = xMinusLimit
         else:
             if x >= xMinusLimit:
-                x -= 1.5 * fast
+                x -= 1.5 * fast * (nowTime - start - previous) / 1000 * 60
                 if x < xMinusLimit: x = xMinusLimit
     if key[pygame.K_RIGHT]:
         if key[pygame.K_LSHIFT]:
             if x <= xPlusLimit:
-                x += 0.5 * fast
+                x += 0.5 * fast * (nowTime - start - previous) / 1000 * 60
                 if x > xPlusLimit: x = xPlusLimit
         else:
             if x <= xPlusLimit:
-                x += 1.5 * fast
+                x += 1.5 * fast * (nowTime - start - previous) / 1000 * 60
                 if x > xPlusLimit: x = xPlusLimit
     if key[pygame.K_UP]:
         if key[pygame.K_LSHIFT]:
             if y >= yMinusLimit:
-                y -= 0.5 * fast
+                y -= 0.5 * fast * (nowTime - start - previous) / 1000 * 60
                 if y < yMinusLimit: y = yMinusLimit
         else:
             if y >= yMinusLimit:
-                y -= 1.5 * fast
+                y -= 1.5 * fast * (nowTime - start - previous) / 1000 * 60
                 if y < yMinusLimit: y = yMinusLimit
     if key[pygame.K_DOWN]:
         if key[pygame.K_LSHIFT]:
             if y <= yPlusLimit:
-                y += 0.5 * fast
+                y += 0.5 * fast * (nowTime - start - previous) / 1000 * 60
                 if y > yPlusLimit: y = yPlusLimit
         else:
             if y <= yPlusLimit:
-                y += 1.5 * fast
+                y += 1.5 * fast * (nowTime - start - previous) / 1000 * 60
                 if y > yPlusLimit: y = yPlusLimit
 
     if length > patternNo:
@@ -503,79 +568,310 @@ while avoiding:
                     i.status = False
                     hp -= int(i.size ** 2 // 45)
                 screen.blit(i.image, (int(int(i.x) - i.size / 2), int(int(i.y) - i.size / 2)))
-    fpsClock.tick(FPS)
-    if nowTime - previous > 1000:
-        previous += 1000
-        if hp < 1000:
+    if (nowTime - start) // 1000 > previous // 1000:
+        if hp < 999:
             hp += 2
+        elif hp == 999:
+            hp = 1000
+    if nowTime - start > timingPoints[-1] + 5000:
+        score += (timingPoints[-1] + 5000 - previous) * hp
+    else:
+        score += (nowTime - start - previous) * hp
+    previous = nowTime - start
     screen.blit(background[0], (0, 0))
     showHP(hp)
+    Text(score, 520, 50)
     pygame.display.flip()
-    if nowTime - start > timingPoints[-1] + 50000:
+    if nowTime - start > timingPoints[-1] + 5000:
         avoiding = False
     if hp < 0:
         avoiding, running = False, False
+    fpsClock.tick(FPS)
 # rhythm = True
 # while rhythm:
-lane1, lane2, lane3, lane4 = 0, 0, 0, 0
+laneNo = [0, 0, 0, 0]
 cur = []
+curLong = []
 cr = 0
+rhythmTimingPoints = []
+rhythmNotes = []
+rhythmLongNotes = []
+currentNotePattern = []
+currentLongPattern = []
 while True:  # 10-01 - Reading Rhythm Patterns
-    line = f[0].readline()
-    # print(line)
-    if line == "=====\n": break
+    line = f[1].readline()
     if not line: break
     p = list(map(str, line.split()))
     if cr == int(p[0]):
         if p[1] == "N":
             if int(p[2]) == 1:
-                cur.append(Note(int(p[2]), int(p[0]), False, lane1))
-                lane1 += 1
+                cur.append(Note1(int(p[0]), laneNo[0]))
+                laneNo[0] += 1
             elif int(p[2]) == 2:
-                cur.append(Note(int(p[2]), int(p[0]), False, lane2))
-                lane2 += 1
+                cur.append(Note2(int(p[0]), laneNo[1]))
+                laneNo[1] += 1
             elif int(p[2]) == 3:
-                cur.append(Note(int(p[2]), int(p[0]), False, lane3))
-                lane3 += 1
+                cur.append(Note3(int(p[0]), laneNo[2]))
+                laneNo[2] += 1
             elif int(p[2]) == 4:
-                cur.append(Note(int(p[2]), int(p[0]), False, lane4))
-                lane4 += 1
-        if p[1] == "L":
+                cur.append(Note4(int(p[0]), laneNo[3]))
+                laneNo[3] += 1
+        elif p[1] == "L":
             if int(p[2]) == 1:
-                cur.append(Note(int(p[2]), int(p[0]), False, lane1))
-                lane1 += 1
+                cur.append(Note1(int(p[0]), laneNo[0]))
+                curLong.append(LongNote1(int(p[0]), laneNo[0], int(p[3])))
+                laneNo[0] += 1
             elif int(p[2]) == 2:
-                cur.append(Note(int(p[2]), int(p[0]), False, lane2))
-                lane2 += 1
+                cur.append(Note2(int(p[0]), laneNo[1]))
+                curLong.append(LongNote2(int(p[0]), laneNo[1], int(p[3])))
+                laneNo[1] += 1
             elif int(p[2]) == 3:
-                cur.append(Note(int(p[2]), int(p[0]), False, lane3))
-                lane3 += 1
+                cur.append(Note3(int(p[0]), laneNo[2]))
+                curLong.append(LongNote3(int(p[0]), laneNo[2], int(p[3])))
+                laneNo[2] += 1
             elif int(p[2]) == 4:
-                cur.append(Note(int(p[2]), int(p[0]), False, lane4))
-                lane4 += 1
+                cur.append(Note4(int(p[0]), laneNo[3]))
+                curLong.append(LongNote4(int(p[0]), laneNo[3], int(p[3])))
+                laneNo[3] += 1
     else:
         if cr != 0:
-            patterns.append(cur)
-            timingPoints.append(cr)
+            rhythmNotes.append(cur)
+            rhythmLongNotes.append(curLong)
+            rhythmTimingPoints.append(cr)
         cur = []
+        curLong = []
         cr = int(p[0])
-        if p[1] == "C":
-            r, s = p[7].split(";")
-            cur.extend(
-                Circle(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), float(r), float(p[6]),
-                       float(s)))
+        if p[1] == "N":
+            if int(p[2]) == 1:
+                cur.append(Note1(int(p[0]), laneNo[0]))
+                laneNo[0] += 1
+            elif int(p[2]) == 2:
+                cur.append(Note2(int(p[0]), laneNo[1]))
+                laneNo[1] += 1
+            elif int(p[2]) == 3:
+                cur.append(Note3(int(p[0]), laneNo[2]))
+                laneNo[2] += 1
+            elif int(p[2]) == 4:
+                cur.append(Note4(int(p[0]), laneNo[3]))
+                laneNo[3] += 1
         elif p[1] == "L":
-            cur.append(Bullet(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), float(p[7]),
-                              float(p[6]) * 60 / FPS, float(p[2]), float(p[3])))
-        elif p[1] == "E":
-            cur.append(BulletPlayer(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), None, None,
-                                    float(p[6]) * 60 / FPS, float(p[2]), float(p[3]), 0))
-        elif p[1] == "O":
-            cur.extend(
-                Opener(int(p[0]), float(p[2]), float(p[3]), bulletImg[int(p[4])], float(p[5]), float(p[7]), p[6]))
+            if int(p[2]) == 1:
+                cur.append(Note1(int(p[0]), laneNo[0]))
+                curLong.append(LongNote1(int(p[0]), laneNo[0], int(p[3])))
+                laneNo[0] += 1
+            elif int(p[2]) == 2:
+                cur.append(Note2(int(p[0]), laneNo[1]))
+                curLong.append(LongNote2(int(p[0]), laneNo[1], int(p[3])))
+                laneNo[1] += 1
+            elif int(p[2]) == 3:
+                cur.append(Note3(int(p[0]), laneNo[2]))
+                curLong.append(LongNote3(int(p[0]), laneNo[2], int(p[3])))
+                laneNo[2] += 1
+            elif int(p[2]) == 4:
+                cur.append(Note4(int(p[0]), laneNo[3]))
+                curLong.append(LongNote4(int(p[0]), laneNo[3], int(p[3])))
+                laneNo[3] += 1
     # nowLine += 1
-timingPoints.append(cr)
-patterns.append(cur)
+
+rhythmTimingPoints.append(cr)
+rhythmNotes.append(cur)
+rhythmLongNotes.append(curLong)
+opening = True
+while opening:
+    screen.fill((0, 0, 0))  # 회색 화면
+    key = pygame.key.get_pressed()
+    if key[pygame.K_SPACE]:
+        opening = False
+        running = True
+        level = 1
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit(0)
+
+
+def ShowCombo(combo):
+    font = pygame.font.Font("./fonts/HeirofLightBold.ttf", 30)
+    text = font.render(str(combo).zfill(3), True, (255, 255, 255))
+    textRect = text.get_rect()
+    textRect.centerx = 200
+    textRect.centery = 200
+    screen.blit(text, textRect)
+
+isStart = True
+rhythm = True
+patternNo = 0
+currentLines = [0, 0, 0, 0]
+offset = -235
+combo = 0
+judge = 0
+for _ in range(50):
+    currentNotePattern.append(ShowingNote(None, -1, 0, False))
+while rhythm:
+    if isStart:
+        pygame.mixer.music.load(musics[1])
+        pygame.mixer.music.play()
+        start = int(round(time.time() * 1000))
+        isStart = False
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit(0)
+    noteX = [64, 128, 192, 256]
+    nowTime = int(round(time.time() * 1000))
+    screen.fill((0, 0, 0))
+    if len(rhythmTimingPoints) > patternNo:
+        if rhythmTimingPoints[patternNo] <= nowTime - start + 1000 + offset:
+            j = 0
+            curr = rhythmNotes[patternNo][j]
+            i = 0
+            while j < len(rhythmNotes[patternNo]):
+                if not currentNotePattern[i].status:
+                    currentNotePattern[i].timing, currentNotePattern[i].num = curr.timing, curr.num
+                    currentNotePattern[i].type = curr.type
+                    currentNotePattern[i].status = True
+                    j += 1
+                    if j >= len(rhythmNotes[patternNo]):
+                        break
+                    curr = rhythmNotes[patternNo][j]
+                i += 1
+            patternNo += 1
+    pygame.event.pump()  # Allow pygame to handle internal actions.
+    key = pygame.key.get_pressed()
+    for i in currentNotePattern:
+        if i.status:
+            i.go(nowTime - start + offset)
+            screen.blit(noteImg[i.type - 1], (noteX[i.type - 1] - 32, i.y - 15.5))
+            if i.timing < nowTime - start + offset - 180 and i.status:
+                currentLines[i.type - 1] += 1
+                i.status = False
+                hp -= 50
+                combo = 0
+                judge = -1
+                judgeTiming = nowTime - start
+    if key[pygame.K_d] and not previousKey[0]:
+        for p in currentNotePattern:
+            if p.type == 1 and p.num == currentLines[0] and p.status:
+                judge = p.HIT(nowTime - start + offset)
+                if judge > 0:
+                    currentLines[0] += 1
+                    combo += 1
+                    score += int((judge + (combo ** 0.5 / 10) * 100) * hp / 10)
+                    p.status = False
+                    judgeTiming = nowTime - start
+                    if judge == 100 or judge == 101:
+                        if hp < 999: hp += 2
+                        else: hp = 1000
+                    elif 20 < judge < 100:
+                        if hp < 1000: hp += 1
+                        else: hp = 1000
+                    break
+                if judge == -1:
+                    currentLines[0] += 1
+                    combo = 0
+                    p.status = False
+                    judgeTiming = nowTime - start
+                    hp -= 50
+                    break
+    if key[pygame.K_f] and not previousKey[1]:
+        for p in currentNotePattern:
+            if p.type == 2 and p.num == currentLines[1] and p.status:
+                judge = p.HIT(nowTime - start + offset)
+                if judge > 0:
+                    currentLines[1] += 1
+                    combo += 1
+                    score += int((judge + (combo ** 0.5 / 10) * 100) * hp / 10)
+                    p.status = False
+                    judgeTiming = nowTime - start
+                    if judge == 100 or judge == 101:
+                        if hp < 999: hp += 2
+                        else: hp = 1000
+                    elif 20 < judge < 100:
+                        if hp < 1000: hp += 1
+                        else: hp = 1000
+                    break
+                if judge == -1:
+                    currentLines[1] += 1
+                    combo = 0
+                    p.status = False
+                    judgeTiming = nowTime - start
+                    hp -= 50
+                    break
+    if key[pygame.K_j] and not previousKey[2]:
+        for p in currentNotePattern:
+            if p.type == 3 and p.num == currentLines[2] and p.status:
+                judge = p.HIT(nowTime - start + offset)
+                if judge > 0:
+                    currentLines[2] += 1
+                    combo += 1
+                    score += int((judge + (combo ** 0.5 / 10) * 100) * hp / 10)
+                    p.status = False
+                    judgeTiming = nowTime - start
+                    if judge == 100 or judge == 101:
+                        if hp < 999: hp += 2
+                        else: hp = 1000
+                    elif 20 < judge < 100:
+                        if hp < 1000: hp += 1
+                        else: hp = 1000
+                    break
+                if judge == -1:
+                    currentLines[2] += 1
+                    combo = 0
+                    p.status = False
+                    judgeTiming = nowTime - start
+                    hp -= 50
+                    break
+    if key[pygame.K_k] and not previousKey[3]:
+        for p in currentNotePattern:
+            if p.type == 4 and p.num == currentLines[3] and p.status:
+                judge = p.HIT(nowTime - start + offset)
+                if judge > 0:
+                    currentLines[3] += 1
+                    combo += 1
+                    score += int((judge + (combo ** 0.5 / 10) * 100) * hp / 10)
+                    p.status = False
+                    judgeTiming = nowTime - start
+                    if judge == 100 or judge == 101:
+                        if hp < 999: hp += 2
+                        else: hp = 1000
+                    elif 20 < judge < 100:
+                        if hp < 1000: hp += 1
+                        else: hp = 1000
+                    break
+                if judge == -1:
+                    currentLines[3] += 1
+                    combo = 0
+                    p.status = False
+                    judgeTiming = nowTime - start
+                    hp -= 50
+                    break
+    previousKey = [key[pygame.K_d], key[pygame.K_f], key[pygame.K_j], key[pygame.K_k]]
+    screen.blit(background[0], (0, 0))
+    pygame.draw.line(screen, (255, 0, 0), [0, 450], [640, 450], 30)
+    Text(score, 520, 50)
+    showHP(hp)
+    ShowCombo(combo)
+    font = pygame.font.Font("./fonts/PentagramsSalemica-B978.ttf", 28)
+    if judge == 101:
+        text = font.render("Witchtic!", True, (255, 128, 255)) # 보라
+    elif judge == 100:
+        text = font.render("Witchtic!", True, (255, 192, 255)) # 연보라
+    elif judge == 70:
+        text = font.render("Thamiel!", True, (255, 255, 128)) # 연노랑
+    elif judge == 40:
+        text = font.render("Samael", True, (128, 255, 128)) # 연두
+    elif judge == 10:
+        text = font.render("Nehemoth", True, (255, 128, 128)) # 분홍
+    elif judge == -1:
+        text = font.render("Sephira...", True, (255, 0, 0)) # 빨강
+    if judge != 0:
+        if nowTime - start - judgeTiming <= 500:
+            textRect = text.get_rect()
+            textRect.centerx = 200
+            textRect.centery = 300
+            text.set_alpha(100 - (nowTime - start - judgeTiming) // 5)
+            screen.blit(text, textRect)
+    pygame.display.flip()
 
 screen.blit(gameOverImg, (0, 0))
 Text(score, screen.get_rect().centerx, screen.get_rect().centery)
