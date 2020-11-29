@@ -123,11 +123,11 @@ def Judgement(accuracy):
         return 101
     elif (accuracy - 1) // 30 == 1:
         return 100
-    elif (accuracy - 1) // 30 == 2:
+    elif (accuracy - 1) // 30 <= 3:
         return 70
-    elif (accuracy - 1) // 30 == 3:
+    elif (accuracy - 1) // 30 <= 5:
         return 40
-    elif (accuracy - 1) // 30 == 4:
+    elif (accuracy - 1) // 30 <= 8:
         return 10
     else:
         return -1
@@ -153,7 +153,7 @@ class ShowingNote:
         self.y = 450 - (self.timing - curr) / 1000 * 450 * hiSpeed
 
     def HIT(self, curr):
-        if abs(self.timing - curr) <= 180:
+        if abs(self.timing - curr) <= 330:
             return Judgement(abs(self.timing - curr))
         else:
             return 0
@@ -264,7 +264,6 @@ elif level == 2:
         playerImg = pygame.transform.scale(pygame.image.load("./img/witch.png"), (37, 64))
         background = [pygame.image.load("./img/background.png")]
         musics = ["./audio/Pictured as Perfect.mp3", "./audio/Ultra Blazures.mp3"]
-        objectImg = [pygame.image.load("./img/pictasperf_warn.png")]
 
     except Exception as err:
         print('그림 또는 효과음 삽입에 문제가 있습니다.: ', err)
@@ -435,7 +434,7 @@ for _ in range(30):
 for _ in range(100):
     showingDrawings.append(Line(None, None, None, None, None, None, None, None))
 
-avoiding = False
+avoiding = True
 # 09 - Main Game / Avoiding
 while avoiding:
     if isStart:
@@ -689,6 +688,42 @@ while opening:
             pygame.quit()
             sys.exit(0)
 
+story = open("./data/story2.ptn", "r", encoding='UTF8')
+who = story.readline()
+said = story.readline()
+blank = story.readline()
+previous = True
+storyNo = 0
+while True:
+    pygame.event.pump()  # Allow pygame to handle internal actions.
+    key = pygame.key.get_pressed()
+    screen.fill((0, 0, 0))
+    screen.blit(pygame.image.load("./img/story.png"), (5, 337))
+    font = pygame.font.Font("./fonts/HeirofLightBold.ttf", 18)
+    text = font.render(who, True, (255, 255, 255))
+    screen.blit(text, (20, 350))
+    font = pygame.font.Font("./fonts/HeirofLightRegular.ttf", 12)
+    text = font.render(said, True, (0, 0, 0))
+    screen.blit(text, (20, 400))
+    screen.blit(pygame.image.load("./img/Witch/Normal.png"), (5, 80))
+    screen.blit(pygame.image.load("./img/Frums/Normal.png"), (395 - 180, 80))
+    screen.blit(background[0], (0, 0))
+    if not blank:
+        text = font.render("Space : Start", True, (0, 0, 0))
+        screen.blit(text, (300, 450))
+    if not who:
+        break
+    pygame.display.flip()
+    if key[pygame.K_SPACE] and not previous:
+        who = story.readline()
+        said = story.readline()
+        blank = story.readline()
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit(0)
+    previous = key[pygame.K_SPACE]
+
 
 def ShowCombo(combo):
     font = pygame.font.Font("./fonts/HeirofLightBold.ttf", 30)
@@ -698,14 +733,15 @@ def ShowCombo(combo):
     textRect.centery = 200
     screen.blit(text, textRect)
 
+
 isStart = True
 rhythm = True
 patternNo = 0
 currentLines = [0, 0, 0, 0]
-offset = -235
+offset = -275
 combo = 0
 judge = 0
-for _ in range(50):
+for _ in range(35):
     currentNotePattern.append(ShowingNote(None, -1, 0, False))
 while rhythm:
     if isStart:
@@ -717,9 +753,10 @@ while rhythm:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit(0)
-    noteX = [64, 128, 192, 256]
+    noteX = [200-96, 200-32, 200+32, 200+96]
     nowTime = int(round(time.time() * 1000))
     screen.fill((0, 0, 0))
+    pygame.draw.line(screen, (255, 0, 0), [5, 450], [395, 450], 30)
     if len(rhythmTimingPoints) > patternNo:
         if rhythmTimingPoints[patternNo] <= nowTime - start + 1000 + offset:
             j = 0
@@ -742,7 +779,7 @@ while rhythm:
         if i.status:
             i.go(nowTime - start + offset)
             screen.blit(noteImg[i.type - 1], (noteX[i.type - 1] - 32, i.y - 15.5))
-            if i.timing < nowTime - start + offset - 180 and i.status:
+            if i.timing < nowTime - start + offset - 330 and i.status:
                 currentLines[i.type - 1] += 1
                 i.status = False
                 hp -= 50
@@ -760,11 +797,15 @@ while rhythm:
                     p.status = False
                     judgeTiming = nowTime - start
                     if judge == 100 or judge == 101:
-                        if hp < 999: hp += 2
-                        else: hp = 1000
+                        if hp < 999:
+                            hp += 2
+                        else:
+                            hp = 1000
                     elif 20 < judge < 100:
-                        if hp < 1000: hp += 1
-                        else: hp = 1000
+                        if hp < 1000:
+                            hp += 1
+                        else:
+                            hp = 1000
                     break
                 if judge == -1:
                     currentLines[0] += 1
@@ -784,11 +825,15 @@ while rhythm:
                     p.status = False
                     judgeTiming = nowTime - start
                     if judge == 100 or judge == 101:
-                        if hp < 999: hp += 2
-                        else: hp = 1000
+                        if hp < 999:
+                            hp += 2
+                        else:
+                            hp = 1000
                     elif 20 < judge < 100:
-                        if hp < 1000: hp += 1
-                        else: hp = 1000
+                        if hp < 1000:
+                            hp += 1
+                        else:
+                            hp = 1000
                     break
                 if judge == -1:
                     currentLines[1] += 1
@@ -808,11 +853,15 @@ while rhythm:
                     p.status = False
                     judgeTiming = nowTime - start
                     if judge == 100 or judge == 101:
-                        if hp < 999: hp += 2
-                        else: hp = 1000
+                        if hp < 999:
+                            hp += 2
+                        else:
+                            hp = 1000
                     elif 20 < judge < 100:
-                        if hp < 1000: hp += 1
-                        else: hp = 1000
+                        if hp < 1000:
+                            hp += 1
+                        else:
+                            hp = 1000
                     break
                 if judge == -1:
                     currentLines[2] += 1
@@ -832,11 +881,15 @@ while rhythm:
                     p.status = False
                     judgeTiming = nowTime - start
                     if judge == 100 or judge == 101:
-                        if hp < 999: hp += 2
-                        else: hp = 1000
+                        if hp < 999:
+                            hp += 2
+                        else:
+                            hp = 1000
                     elif 20 < judge < 100:
-                        if hp < 1000: hp += 1
-                        else: hp = 1000
+                        if hp < 1000:
+                            hp += 1
+                        else:
+                            hp = 1000
                     break
                 if judge == -1:
                     currentLines[3] += 1
@@ -847,29 +900,27 @@ while rhythm:
                     break
     previousKey = [key[pygame.K_d], key[pygame.K_f], key[pygame.K_j], key[pygame.K_k]]
     screen.blit(background[0], (0, 0))
-    pygame.draw.line(screen, (255, 0, 0), [0, 450], [640, 450], 30)
     Text(score, 520, 50)
     showHP(hp)
     ShowCombo(combo)
     font = pygame.font.Font("./fonts/PentagramsSalemica-B978.ttf", 28)
     if judge == 101:
-        text = font.render("Witchtic!", True, (255, 128, 255)) # 보라
+        text = font.render("Witchtic!", True, (255, 128, 255))  # 보라
     elif judge == 100:
-        text = font.render("Witchtic!", True, (255, 192, 255)) # 연보라
+        text = font.render("Witchtic!", True, (255, 192, 255))  # 연보라
     elif judge == 70:
-        text = font.render("Thamiel!", True, (255, 255, 128)) # 연노랑
+        text = font.render("Thamiel!", True, (255, 255, 128))  # 연노랑
     elif judge == 40:
-        text = font.render("Samael", True, (128, 255, 128)) # 연두
+        text = font.render("Samael", True, (128, 255, 128))  # 연두
     elif judge == 10:
-        text = font.render("Nehemoth", True, (255, 128, 128)) # 분홍
+        text = font.render("Nehemoth", True, (255, 128, 128))  # 분홍
     elif judge == -1:
-        text = font.render("Sephira...", True, (255, 0, 0)) # 빨강
+        text = font.render("Sephira...", True, (255, 0, 0))  # 빨강
     if judge != 0:
         if nowTime - start - judgeTiming <= 500:
             textRect = text.get_rect()
             textRect.centerx = 200
             textRect.centery = 300
-            text.set_alpha(100 - (nowTime - start - judgeTiming) // 5)
             screen.blit(text, textRect)
     pygame.display.flip()
 

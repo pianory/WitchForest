@@ -437,7 +437,7 @@ while running:
             else:
                 if (i.x - x) ** 2 + (i.y - y) ** 2 < (i.size / 2) ** 2:
                     i.status = False
-                    hp -= int(i.size ** 2 // 45)
+                    hp -= int(i.size ** 2 // 45) * (4 - difficulty) ** 2
                 screen.blit(i.image, (int(int(i.x) - i.size / 2), int(int(i.y) - i.size / 2)))
     fpsClock.tick(FPS)
     if nowTime - previous > 1000:
