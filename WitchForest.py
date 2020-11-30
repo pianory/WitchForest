@@ -14,6 +14,8 @@ import time
 # Patterner, Programmer(Little Amount) Kogun(고건)
 # Special Thanks to 404NotFound(김보슬/@circus_atm)
 
+# Github - https://github.com/pianory/WitchForest
+
 # -*- coding:utf-8 -*-#
 
 # 01 - Main Game Setting
