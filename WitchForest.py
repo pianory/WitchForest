@@ -92,7 +92,7 @@ def Circle(timing, x, y, image, size, angle, speed, shift):
     return a
 
 
-# 03-07 - Function that opens
+# 03-07 - Function that opens the bullet
 def Opener(timing, x, y, image, size, angle, speed):
     global FPS
     a = []
@@ -375,7 +375,7 @@ while opening:
 menuX = 0
 menuY = 0
 live = False
-while gameOn: # Processing Game
+while gameOn: # 08 - Processing Game
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -433,11 +433,11 @@ avoiding = True
 rhythm = False
 isStart = True
 
-while live: # Main Game
+while live: # 09 -  Main Game
     noteImg = [pygame.image.load("./img/25_1.png"), pygame.image.load("./img/25_2.png"), pygame.image.load("./img/25_3.png"), pygame.image.load("./img/25_4.png")]
     playerCharacter = [pygame.image.load("./img/Witch/Normal.png"), pygame.image.load("./img/Witch/Angry.png"),
                        pygame.image.load("./img/Witch/Laugh.png"), pygame.image.load("./img/Witch/Shocked.png")]
-    if level == 0:
+    if level == 0: # Loading the Image/Audio/Story
         try:
             story = [open("./data/story0.ptn", "r", encoding='UTF8')]
             background = [pygame.image.load("./img/background.png")]
@@ -534,13 +534,13 @@ while live: # Main Game
             print('그림 또는 효과음 삽입에 문제가 있습니다.: ', err)
             pygame.quit()
             sys.exit(0)
-    if level == 0:
-        currentStory = readStory(story[0])
-        playerNo = 0
+    if level == 0: # Opening Story
+        currentStory = readStory(story[0]) # Read Story
+        playerNo = 0 # Image No.
         enemyNo = 0
-        for i in currentStory:
+        for i in currentStory: # Until Story Finishes
             time.sleep(0.5)
-            if i[0] == "Circus":
+            if i[0] == "Circus": # Change the Image
                 playerNo = int(i[2])
             else:
                 enemyNo = int(i[2])
@@ -548,7 +548,7 @@ while live: # Main Game
                 pygame.event.pump()  # Allow pygame to handle internal actions.
                 key = pygame.key.get_pressed()
                 screen.fill((0, 0, 0))
-                screen.blit(pygame.image.load("./img/story.png"), (5, 337))
+                screen.blit(pygame.image.load("./img/story.png"), (5, 337)) # Show the Story
                 font = pygame.font.Font("./fonts/HeirofLightBold.ttf", 18)
                 text = font.render(i[0], True, (255, 255, 255))
                 screen.blit(text, (20, 350))
@@ -558,19 +558,18 @@ while live: # Main Game
 
                 screen.blit(playerCharacter[playerNo], (5, 80))
                 screen.blit(background[0], (0, 0))
-                if currentStory[-1] == i:
+                if currentStory[-1] == i: # When Last Story
                     text = font.render("Space : Start", True, (0, 0, 0))
                     screen.blit(text, (300, 450))
                 pygame.display.flip()
-                if key[pygame.K_SPACE]:
+                if key[pygame.K_SPACE]: # When the SpaceBar Pressed
                     break
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         pygame.quit()
                         sys.exit(0)
-                previous = key[pygame.K_SPACE]
 
-    if difficulty == 3 and level != 0:
+    if difficulty == 3 and level != 0: # Story 1
         currentStory = readStory(story[0])
         playerNo = 0
         enemyNo = 0
@@ -605,9 +604,8 @@ while live: # Main Game
                     if event.type == pygame.QUIT:
                         pygame.quit()
                         sys.exit(0)
-                previous = key[pygame.K_SPACE]
 
-    if level != 0:
+    if level != 0: # Loading The Avoid Pattern
         patternNo, isStart, bullets = 0, True, []
         timingPoints, patterns = readPatternFile(f[0], difficulty)
         for _ in range(1000):
@@ -615,14 +613,14 @@ while live: # Main Game
                                       None))  # Tmg, img, siz, sx, sy, ang, spd, sta, x, y
     # Avoid Game
     while avoiding and level != 0:
-        if isStart:
+        if isStart: # Song On
             pygame.mixer.music.load(musics[0])
             pygame.mixer.music.play()
             start = int(round(time.time() * 1000))
             isStart = False
             previous = 0
             got = start
-        nowTime = int(round(time.time() * 1000))
+        nowTime = int(round(time.time() * 1000)) # Timing
         screen.fill((0, 0, 0))
         playerPos = (x - 37 / 2, y - 32)
         screen.blit(playerImg, playerPos)
@@ -632,7 +630,7 @@ while live: # Main Game
                 sys.exit(0)
         pygame.event.pump()  # Allow pygame to handle internal actions.
         key = pygame.key.get_pressed()
-        if key[pygame.K_LEFT]:
+        if key[pygame.K_LEFT]: # Player Move
             if key[pygame.K_LSHIFT]:
                 if x >= xMinusLimit:
                     x -= 0.5 * fast * (nowTime - start - previous) / 1000 * 60
@@ -669,7 +667,7 @@ while live: # Main Game
                     y += 1.5 * fast * (nowTime - start - previous) / 1000 * 60
                     if y > yPlusLimit: y = yPlusLimit
 
-        if len(timingPoints) > patternNo:
+        if len(timingPoints) > patternNo: # Load The Pattern
             if nowTime - start >= int(timingPoints[patternNo]):
                 j = 0
                 curr = patterns[patternNo][j]
@@ -689,22 +687,22 @@ while live: # Main Game
                         curr.show(x, y)
                     i += 1
                 patternNo += 1
-        for i in bullets:
+        for i in bullets: # Show the Pattern On Screen
             if i.status:
                 i.go(nowTime - start)
                 if i.x < -10 or i.x > 410 or i.y < -10 or i.y > 510:
                     i.status = False
-                else:
+                else: # HP Drain
                     if (i.x - x) ** 2 + (i.y - y) ** 2 < (i.size / 2) ** 2:
                         i.status = False
                         got = nowTime
                         hp -= int(i.size ** 2 // 45) * (4 - difficulty) ** 2 // (5 - level) ** 0.5
                     screen.blit(i.image, (int(int(i.x) - i.size / 2), int(int(i.y) - i.size / 2)))
-        if (nowTime - start) // 1000 > previous // 1000:
+        if (nowTime - start) // 1000 > previous // 1000: # HP Regeneration
             hp += (1 + (nowTime - got) // 1000) * (5 - level)
             if hp > 1000:
                 hp = 1000
-        if nowTime - start > timingPoints[-1] + 5000:
+        if nowTime - start > timingPoints[-1] + 5000: # Score On
             score += (timingPoints[-1] + 5000 - previous) * hp
         else:
             score += (nowTime - start - previous) * hp
@@ -713,15 +711,15 @@ while live: # Main Game
         showHP(hp)
         Text(score, 520, 50)
         pygame.display.flip()
-        if nowTime - start > timingPoints[-1] + 5000:
+        if nowTime - start > timingPoints[-1] + 5000: # Stage Clear
             avoiding = False
         if hp < 0:
-            avoiding, live = False, False
+            avoiding, live = False, False # Stage Failed
         fpsClock.tick(FPS)
     if not live:
         break
 
-    if difficulty == 3 and level != 0:
+    if difficulty == 3 and level != 0: # Story 2
         currentStory = readStory(story[1])
         playerNo = 0
         enemyNo = 0
@@ -756,7 +754,7 @@ while live: # Main Game
                     if event.type == pygame.QUIT:
                         pygame.quit()
                         sys.exit(0)
-    if difficulty == 3 and level != 0:
+    if difficulty == 3 and level != 0: # Load Rhythm Pattern For 'Very hard'
         isStart = True
         rhythm = True
         patternNo = 0
@@ -768,7 +766,7 @@ while live: # Main Game
         currentNotePattern = []
         for _ in range(35):
             currentNotePattern.append(ShowingNote(None, -1, 0, False))
-    while rhythm:
+    while rhythm: # Rhythm Game
         if isStart:
             pygame.mixer.music.load(musics[1])
             pygame.mixer.music.play()
@@ -782,7 +780,7 @@ while live: # Main Game
         nowTime = int(round(time.time() * 1000))
         screen.fill((0, 0, 0))
         pygame.draw.line(screen, (255, 0, 0), [5, 450], [395, 450], 30)
-        if len(rhythmTimingPoints) > patternNo:
+        if len(rhythmTimingPoints) > patternNo: # Load Pattern
             if rhythmTimingPoints[patternNo] <= nowTime - start + 1000 + offset:
                 j = 0
                 curr = rhythmNotes[patternNo][j]
@@ -800,7 +798,7 @@ while live: # Main Game
                 patternNo += 1
         pygame.event.pump()  # Allow pygame to handle internal actions.
         key = pygame.key.get_pressed()
-        for i in currentNotePattern:
+        for i in currentNotePattern: # Show the Pattern On Screen
             if i.status:
                 i.go(nowTime - start + offset)
                 screen.blit(noteImg[i.type - 1], (noteX[i.type - 1] - 32, i.y - 15.5))
@@ -811,10 +809,10 @@ while live: # Main Game
                     combo = 0
                     judge = -1
                     judgeTiming = nowTime - start
-        if key[pygame.K_d] and not previousKey[0]:
+        if key[pygame.K_d] and not previousKey[0]: # Key Press
             for p in currentNotePattern:
                 if p.type == 1 and p.num == currentLines[0] and p.status:
-                    judge = p.HIT(nowTime - start + offset)
+                    judge = p.HIT(nowTime - start + offset) # Judge the Judge
                     if judge > 0:
                         currentLines[0] += 1
                         combo += 1
@@ -928,7 +926,7 @@ while live: # Main Game
         Text(score, 520, 50)
         showHP(hp)
         ShowCombo(combo)
-        font = pygame.font.Font("./fonts/PentagramsSalemica-B978.ttf", 28)
+        font = pygame.font.Font("./fonts/PentagramsSalemica-B978.ttf", 28) # Show the Judge
         if judge == 101:
             text = font.render("Witchtic!", True, (255, 128, 255))  # 보라
         elif judge == 100:
@@ -941,7 +939,7 @@ while live: # Main Game
             text = font.render("Nehemoth", True, (255, 128, 128))  # 분홍
         elif judge == -1:
             text = font.render("Sephira...", True, (255, 0, 0))  # 빨강
-        if judge != 0:
+        if judge != 0: # Missed
             if nowTime - start - judgeTiming <= 500:
                 textRect = text.get_rect()
                 textRect.centerx = 200
@@ -955,7 +953,7 @@ while live: # Main Game
     if not live:
         break
 
-    if difficulty == 3 and level != 0:
+    if difficulty == 3 and level != 0: # Story 3
         currentStory = readStory(story[2])
         playerNo = 0
         enemyNo = 0
@@ -1024,7 +1022,7 @@ while live: # Finish
     pygame.display.flip()
 
 
-while howToPlay:
+while howToPlay: # How To Play
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
