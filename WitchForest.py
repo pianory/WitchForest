@@ -4,6 +4,16 @@ import sys
 import math
 import time
 
+
+# 마녀의 숲은 게임 '동방프로젝트'와 게임 'Just Shapes and Beats' 등의 게임에 영감을 받아 제작되었습니다.
+# 키보드로 움직이고 Shift 키를 통해 속도를 줄일 수 있다는 점과 탄막의 패턴이 굉장히 어렵다는 점은 동방 프로젝트에서, 박자에 맞춰 패턴이 나온다는 점은 JSAB에서 영감을 받았습니다.
+# 게임을 만들며 여러 이미지를 제작하고, 캐릭터를 외주받아 작업하기도 하였습니다.
+# 여럿이서 같이 만들었다면 더 좋은 프로젝트가 되었을 것 같은데, 좀 많이 아쉬운 프로젝트입니다.
+
+# Director, Designer, Programmer, Patterner Pianory(송재한)
+# Patterner, Programmer(Little Amount) Kogun(고건)
+# Special Thanks to 404NotFound(김보슬/@circus_atm)
+
 # -*- coding:utf-8 -*-#
 
 # 01 - Main Game Setting
@@ -41,7 +51,7 @@ class BulletPlayer(Bullet):
         super().__init__(timing, x, y, image, size, angle, speed, startX, startY)
         self.playerposX, self.playerposY = playerposX, playerposY
 
-    def show(self, playerX, playerY):
+    def show(self, playerX, playerY): # Determine the Angle to Player
         self.angle = math.atan(
             (playerY - self.startY) / (playerX - self.startX + 0.0001)) / math.pi if playerX > self.startX else (
                                                                                                                         math.pi + math.atan(
@@ -57,7 +67,7 @@ class BulletShow:
         self.x, self.y = x, y
         self.speed = speed
 
-    def go(self, c):
+    def go(self, c): # Move the Bullet
         global FPS
         self.x = self.startX + math.cos(self.angle * math.pi) * self.speed * (c - self.timing) / 1000 * FPS
         self.y = self.startY + math.sin(self.angle * math.pi) * self.speed * (c - self.timing) / 1000 * FPS
@@ -70,7 +80,7 @@ class Object:
         self.startX, self.startY = startX, startY
         self.height, self.width = height, width
 
-    def go(self, c):
+    def go(self, c): # Move the Object(Update TODO)
         self.x = self.startX + math.cos(self.moveAngle * math.pi) * self.speed * (c - self.start) / 1000 * FPS
         self.y = self.startY + math.sin(self.moveAngle * math.pi) * self.speed * (c - self.start) / 1000 * FPS
 
@@ -134,10 +144,10 @@ class ShowingNote:
         self.status = status
         self.type = type
 
-    def go(self, curr):
+    def go(self, curr): # Move the Note
         self.y = 450 - (self.timing - curr) / 1000 * 450 * hiSpeed
 
-    def HIT(self, curr):
+    def HIT(self, curr): # Is Hit?
         if abs(self.timing - curr) <= 330:
             return Judgement(abs(self.timing - curr))
         else:
